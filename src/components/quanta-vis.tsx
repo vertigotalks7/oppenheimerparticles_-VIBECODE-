@@ -130,46 +130,44 @@ const QuantaVis: React.FC = () => {
     const particles = new THREE.Points(geometry, material);
     scene.add(particles);
 
-    const streakCount = 4000;
-    const streakGeometry = new THREE.BufferGeometry();
-    const streakPositions = new Float32Array(streakCount * 3);
-    const streakLifetime = new Float32Array(streakCount);
-    streakGeometry.setAttribute('position', new THREE.BufferAttribute(streakPositions, 3));
-    streakGeometry.setAttribute('lifetime', new THREE.BufferAttribute(streakLifetime, 1));
+    const maxTrailPoints = 50;
+    const trailPoints: THREE.Vector3[] = [];
+    for (let i = 0; i < maxTrailPoints; i++) {
+        trailPoints.push(new THREE.Vector3());
+    }
+    const trailCurve = new THREE.CatmullRomCurve3(trailPoints);
+    let trailGeometry = new THREE.TubeGeometry(trailCurve, maxTrailPoints - 1, 0.2, 8, false);
     
-    const streakMaterial = new THREE.ShaderMaterial({
-      uniforms: {
-        color: { value: new THREE.Color(0xffffff) },
-      },
-      vertexShader: `
-        attribute float lifetime;
-        varying float vLifetime;
-        void main() {
-          vLifetime = lifetime;
-          gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-          gl_PointSize = (1.0 - lifetime) * 10.0 + 2.0;
-        }
-      `,
-      fragmentShader: `
-        uniform vec3 color;
-        varying float vLifetime;
-        void main() {
-          float r = 0.0;
-          vec2 cxy = 2.0 * gl_PointCoord - 1.0;
-          r = dot(cxy, cxy);
-          if (r > 1.0) {
-              discard;
-          }
-          gl_FragColor = vec4(color, (1.0 - vLifetime) * (1.0 - r));
-        }
-      `,
-      transparent: true,
-      blending: THREE.AdditiveBlending,
-      depthWrite: false,
+    const trailMaterial = new THREE.ShaderMaterial({
+        uniforms: {
+            time: { value: 0 },
+            color: { value: new THREE.Color(0x00aaff) }
+        },
+        vertexShader: `
+            varying float vUv;
+            void main() {
+                vUv = uv.x;
+                gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+            }
+        `,
+        fragmentShader: `
+            uniform float time;
+            uniform vec3 color;
+            varying float vUv;
+            void main() {
+                float alpha = (1.0 - vUv) * 0.7;
+                gl_FragColor = vec4(color, alpha);
+            }
+        `,
+        transparent: true,
+        blending: THREE.AdditiveBlending,
+        depthWrite: false,
+        side: THREE.DoubleSide
     });
-    const streaks = new THREE.Points(streakGeometry, streakMaterial);
-    scene.add(streaks);
-    let currentStreakIndex = 0;
+
+    let trailMesh = new THREE.Mesh(trailGeometry, trailMaterial);
+    trailMesh.visible = false;
+    scene.add(trailMesh);
 
     const setupAudio = async () => {
       await Tone.start();
@@ -194,8 +192,16 @@ const QuantaVis: React.FC = () => {
       if (synth && Tone.context.state === 'running') {
         synth.triggerAttackRelease('C2', '8n', Tone.now());
       }
+      trailMesh.visible = true;
+      const mousePoint = getMouseWorldPos();
+      for (let i = 0; i < maxTrailPoints; i++) {
+        trailPoints[i].copy(mousePoint);
+      }
     };
-    const onMouseUp = () => { isMouseDown = false; };
+    const onMouseUp = () => {
+        isMouseDown = false;
+        trailMesh.visible = false;
+    };
     
     window.addEventListener('mousemove', onMouseMove);
     window.addEventListener('mousedown', onMouseDown);
@@ -212,6 +218,14 @@ const QuantaVis: React.FC = () => {
 
     const clock = new THREE.Clock();
     const simplex = new SimplexNoise();
+
+    const getMouseWorldPos = () => {
+        const mouseWorldPos = new THREE.Vector3(mouse.x, mouse.y, 0.5);
+        mouseWorldPos.unproject(camera);
+        const dir = mouseWorldPos.sub(camera.position).normalize();
+        const distance = -camera.position.z / dir.z;
+        return camera.position.clone().add(dir.multiplyScalar(distance));
+    }
     
     const animate = () => {
       requestAnimationFrame(animate);
@@ -219,12 +233,9 @@ const QuantaVis: React.FC = () => {
       const elapsedTime = clock.getElapsedTime();
 
       (material.uniforms.time as THREE.IUniform<number>).value = elapsedTime;
+      (trailMaterial.uniforms.time as THREE.IUniform<number>).value = elapsedTime;
 
-      const mouseWorldPos = new THREE.Vector3(mouse.x, mouse.y, 0.5);
-      mouseWorldPos.unproject(camera);
-      const dir = mouseWorldPos.sub(camera.position).normalize();
-      const distance = -camera.position.z / dir.z;
-      const mousePoint = camera.position.clone().add(dir.multiplyScalar(distance));
+      const mousePoint = getMouseWorldPos();
       
       const pPositions = particles.geometry.attributes.position.array as Float32Array;
       
@@ -290,26 +301,17 @@ const QuantaVis: React.FC = () => {
         }
       }
       particles.geometry.attributes.position.needsUpdate = true;
-
-      if (isMouseDown) {
-        for(let i=0; i<5; i++) {
-            const index = currentStreakIndex % streakCount;
-            const i3 = index * 3;
-            streakPositions[i3] = mousePoint.x + (Math.random() - 0.5) * 0.5;
-            streakPositions[i3 + 1] = mousePoint.y + (Math.random() - 0.5) * 0.5;
-            streakPositions[i3 + 2] = mousePoint.z + (Math.random() - 0.5) * 0.5;
-            streakLifetime[index] = 0.0;
-            currentStreakIndex++;
-        }
-      }
       
-      for (let i = 0; i < streakCount; i++) {
-        if (streakLifetime[i] < 1.0) {
-          streakLifetime[i] += deltaTime * 0.7;
-        }
+      if (isMouseDown) {
+        trailPoints.shift();
+        trailPoints.push(mousePoint.clone());
+        
+        const newCurve = new THREE.CatmullRomCurve3(trailPoints);
+        const newGeometry = new THREE.TubeGeometry(newCurve, maxTrailPoints - 1, 0.2, 8, false);
+        
+        trailMesh.geometry.dispose();
+        trailMesh.geometry = newGeometry;
       }
-      streaks.geometry.attributes.position.needsUpdate = true;
-      streaks.geometry.attributes.lifetime.needsUpdate = true;
 
       renderer.render(fadeScene, fadeCamera);
       composer.render();
@@ -330,19 +332,21 @@ const QuantaVis: React.FC = () => {
       }
       
       scene.traverse(object => {
-        if (object instanceof THREE.Points) {
-          if (object.geometry) object.geometry.dispose();
-          const mat = object.material as THREE.ShaderMaterial;
-          if (mat.dispose) mat.dispose();
+        if (object instanceof THREE.Mesh || object instanceof THREE.Points) {
+            if (object.geometry) object.geometry.dispose();
+            const mat = object.material as (THREE.ShaderMaterial | THREE.MeshBasicMaterial);
+            if(Array.isArray(mat)) {
+                mat.forEach(m => m.dispose());
+            } else if (mat.dispose) {
+                mat.dispose();
+            }
         }
       });
       renderer.dispose();
-      // composer doesn't have a dispose method, but its passes might.
-      // This is a basic cleanup. For a more thorough one, you'd manage pass resources individually.
     };
   }, []);
 
-  return <div ref={mountRef} className="fixed top-0 left-0 w-full h-full z-0" />;
+  return <div ref={mountRef} className="fixed top-0 left-0 w-full h-full -z-10" />;
 };
 
 export default QuantaVis;
