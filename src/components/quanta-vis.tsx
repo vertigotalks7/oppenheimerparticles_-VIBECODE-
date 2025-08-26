@@ -138,7 +138,7 @@ const QuantaVis: React.FC = () => {
     const trailMaterial = new THREE.ShaderMaterial({
         uniforms: {
             time: { value: 0 },
-            color: { value: new THREE.Color(0x00aaff) }
+            color: { value: new THREE.Color(0xffffff) }
         },
         vertexShader: `
             varying float vUv;
@@ -343,7 +343,7 @@ const QuantaVis: React.FC = () => {
     };
   }, []);
 
-  return <div ref={mountRef} className="fixed top-0 left-0 w-full h-full z-0" />;
+  return <div ref={mountRef} className="fixed top-0 left-0 w-full h-full -z-10" />;
 };
 
 export default QuantaVis;
