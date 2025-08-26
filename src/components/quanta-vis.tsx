@@ -213,8 +213,8 @@ const QuantaVis: React.FC = () => {
       const pPositions = particles.geometry.attributes.position.array as Float32Array;
       
       const boundingBox = new THREE.Box3(
-        new THREE.Vector3(-60, -40, -30),
-        new THREE.Vector3(60, 40, 30)
+        new THREE.Vector3(-60, -40, -40),
+        new THREE.Vector3(60, 40, 40)
       );
 
       for (let i = 0; i < particleCount; i++) {
@@ -231,7 +231,7 @@ const QuantaVis: React.FC = () => {
         
         const noiseScale = 0.05;
         const timeFactor = elapsedTime * 0.1;
-        const curlStrength = 0.05;
+        const curlStrength = 0.03;
 
         const noiseX = simplex.noise3d(particlePos.x * noiseScale, particlePos.y * noiseScale, timeFactor);
         const noiseY = simplex.noise3d(particlePos.y * noiseScale, particlePos.z * noiseScale, timeFactor);
@@ -241,9 +241,9 @@ const QuantaVis: React.FC = () => {
         velocities[i3 + 1] += noiseZ * curlStrength;
         velocities[i3 + 2] += noiseX * curlStrength;
         
-        velocities[i3] *= 0.98;
-        velocities[i3 + 1] *= 0.98;
-        velocities[i3 + 2] *= 0.98;
+        velocities[i3] *= 0.96;
+        velocities[i3 + 1] *= 0.96;
+        velocities[i3 + 2] *= 0.96;
 
         pPositions[i3] += velocities[i3];
         pPositions[i3 + 1] += velocities[i3 + 1];
@@ -319,3 +319,5 @@ const QuantaVis: React.FC = () => {
 };
 
 export default QuantaVis;
+
+    
