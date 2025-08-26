@@ -127,7 +127,7 @@ const QuantaVis: React.FC = () => {
     scene.add(particles);
 
     const createTrail = () => {
-        const maxTrailPoints = 30;
+        const maxTrailPoints = 50;
         const trailPoints = Array.from({ length: maxTrailPoints }, () => new THREE.Vector3());
         const trailCurve = new THREE.CatmullRomCurve3(trailPoints);
         const trailGeometry = new THREE.TubeGeometry(trailCurve, maxTrailPoints - 1, 0.2, 8, false);
@@ -369,6 +369,8 @@ const QuantaVis: React.FC = () => {
 };
 
 export default QuantaVis;
+
+    
 
     
 
