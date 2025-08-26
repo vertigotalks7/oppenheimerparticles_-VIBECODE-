@@ -59,7 +59,7 @@ const QuantaVis: React.FC = () => {
     const particleCount = 5000;
     const positions = new Float32Array(particleCount * 3);
     const velocities = new Float32Array(particleCount * 3);
-    const colors = new Float32Array(particleCount * 3);
+    const baseColors = new Float32Array(particleCount * 3);
     const scales = new Float32Array(particleCount);
 
     const colorPalette = [new THREE.Color(0x7DD3FC), new THREE.Color(0xFFFFFF), new THREE.Color(0x00A3FF)];
@@ -71,42 +71,55 @@ const QuantaVis: React.FC = () => {
       positions[i3 + 2] = (Math.random() - 0.5) * 60 - 30;
 
       const color = colorPalette[Math.floor(Math.random() * colorPalette.length)];
-      colors[i3] = color.r;
-      colors[i3 + 1] = color.g;
-      colors[i3 + 2] = color.b;
+      baseColors[i3] = color.r;
+      baseColors[i3 + 1] = color.g;
+      baseColors[i3 + 2] = color.b;
 
       scales[i] = Math.random() * 1.5 + 0.5;
     }
 
     const geometry = new THREE.BufferGeometry();
     geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-    geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+    geometry.setAttribute('baseColor', new THREE.BufferAttribute(baseColors, 3));
     geometry.setAttribute('scale', new THREE.BufferAttribute(scales, 1));
     
     const material = new THREE.ShaderMaterial({
         uniforms: {
             time: { value: 1.0 },
+            color1: { value: new THREE.Color(0xff4500) }, // Red-Orange
+            color2: { value: new THREE.Color(0xffd700) }, // Gold
         },
         vertexShader: `
             attribute float scale;
-            attribute vec3 color;
-            varying vec3 vColor;
+            attribute vec3 baseColor;
+            varying vec3 vBaseColor;
             void main() {
-                vColor = color;
+                vBaseColor = baseColor;
                 vec4 modelViewPosition = modelViewMatrix * vec4(position, 1.0);
                 gl_Position = projectionMatrix * modelViewPosition;
                 gl_PointSize = scale * ( 300.0 / -modelViewPosition.z );
             }
         `,
         fragmentShader: `
-            varying vec3 vColor;
+            varying vec3 vBaseColor;
             uniform float time;
+            uniform vec3 color1;
+            uniform vec3 color2;
+
             void main() {
                 float d = distance(gl_PointCoord, vec2(0.5, 0.5));
                 if (d > 0.5) discard;
+                
+                float timeFactor = sin(time * 0.2);
+                float transition = smoothstep(-0.5, 0.5, timeFactor);
+                
+                vec3 fieryColor = mix(color1, color2, sin(time * 0.5 + gl_FragCoord.x) * 0.5 + 0.5);
+                vec3 finalColor = mix(vBaseColor, fieryColor, transition);
+                
                 float alpha = 1.0 - d * 2.0;
                 alpha *= 0.7 + 0.3 * sin(time * 10.0 + gl_FragCoord.x);
-                gl_FragColor = vec4(vColor, alpha);
+                
+                gl_FragColor = vec4(finalColor, alpha);
             }
         `,
         transparent: true,
@@ -324,11 +337,12 @@ const QuantaVis: React.FC = () => {
         }
       });
       renderer.dispose();
-      composer.dispose();
+      // composer doesn't have a dispose method, but its passes might.
+      // This is a basic cleanup. For a more thorough one, you'd manage pass resources individually.
     };
   }, []);
 
-  return <div ref={mountRef} className="fixed top-0 left-0 w-full h-full z-0" />;
+  return <div ref={mountRef} className="fixed top-0 left-0 w-full h-full -z-10" />;
 };
 
 export default QuantaVis;
