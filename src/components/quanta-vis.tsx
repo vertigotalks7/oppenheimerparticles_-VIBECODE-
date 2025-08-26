@@ -167,9 +167,9 @@ const QuantaVis: React.FC = () => {
 
     const automatedTrails: any[] = [];
     const trailConfigs = [
-        { color: 0xffffff, rotation: new THREE.Euler(Math.PI / 4, Math.PI / 4, 0), radiusX: 80, radiusY: 60, speed: 25 },
-        { color: 0xffffff, rotation: new THREE.Euler(0, -Math.PI / 3, -Math.PI / 6), radiusX: 70, radiusY: 90, speed: 24 },
-        { color: 0xffffff, rotation: new THREE.Euler(Math.PI / 2, 0, Math.PI / 3), radiusX: 100, radiusY: 70, speed: 26 },
+        { color: 0xffffff, rotation: new THREE.Euler(Math.PI / 4, Math.PI / 4, 0), radiusX: 80, radiusY: 60, speed: 8 },
+        { color: 0xffffff, rotation: new THREE.Euler(0, -Math.PI / 3, -Math.PI / 6), radiusX: 70, radiusY: 90, speed: 7 },
+        { color: 0xffffff, rotation: new THREE.Euler(Math.PI / 2, 0, Math.PI / 3), radiusX: 100, radiusY: 70, speed: 9 },
     ];
 
     trailConfigs.forEach(config => {
@@ -314,7 +314,7 @@ const QuantaVis: React.FC = () => {
       }
 
       automatedTrails.forEach(trail => {
-          const t = elapsedTime * trail.speed;
+          const t = elapsedTime * trail.speed / 10;
           const x = trail.radiusX * Math.cos(t);
           const y = trail.radiusY * Math.sin(t);
           const z = trail.radiusY * Math.sin(t) * Math.cos(t);
