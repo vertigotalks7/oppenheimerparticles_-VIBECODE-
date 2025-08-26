@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useRef, useEffect } from 'react';
@@ -24,7 +25,7 @@ const QuantaVis: React.FC = () => {
     scene.fog = new THREE.FogExp2(0x000a12, 0.02);
 
     const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-    camera.position.z = 70; // Pushed camera farther back
+    camera.position.z = 70;
     const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
     renderer.setSize(window.innerWidth, window.innerHeight);
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
@@ -81,8 +82,8 @@ const QuantaVis: React.FC = () => {
     const material = new THREE.ShaderMaterial({
         uniforms: {
             time: { value: 1.0 },
-            color1: { value: new THREE.Color(0xff4500) }, // Red-Orange
-            color2: { value: new THREE.Color(0xffd700) }, // Gold
+            color1: { value: new THREE.Color(0xff4500) },
+            color2: { value: new THREE.Color(0xffd700) },
         },
         vertexShader: `
             attribute float scale;
@@ -125,44 +126,58 @@ const QuantaVis: React.FC = () => {
     const particles = new THREE.Points(geometry, material);
     scene.add(particles);
 
-    const maxTrailPoints = 50;
-    const trailPoints: THREE.Vector3[] = [];
-    for (let i = 0; i < maxTrailPoints; i++) {
-        trailPoints.push(new THREE.Vector3());
-    }
-    const trailCurve = new THREE.CatmullRomCurve3(trailPoints);
-    let trailGeometry = new THREE.TubeGeometry(trailCurve, maxTrailPoints - 1, 0.2, 8, false);
-    
-    const trailMaterial = new THREE.ShaderMaterial({
-        uniforms: {
-            time: { value: 0 },
-            color: { value: new THREE.Color(0xffffff) }
-        },
-        vertexShader: `
-            varying float vUv;
-            void main() {
-                vUv = uv.x;
-                gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-            }
-        `,
-        fragmentShader: `
-            uniform float time;
-            uniform vec3 color;
-            varying float vUv;
-            void main() {
-                float alpha = (1.0 - vUv) * 0.7;
-                gl_FragColor = vec4(color, alpha);
-            }
-        `,
-        transparent: true,
-        blending: THREE.AdditiveBlending,
-        depthWrite: false,
-        side: THREE.DoubleSide
-    });
+    const createTrail = () => {
+        const maxTrailPoints = 50;
+        const trailPoints = Array.from({ length: maxTrailPoints }, () => new THREE.Vector3());
+        const trailCurve = new THREE.CatmullRomCurve3(trailPoints);
+        const trailGeometry = new THREE.TubeGeometry(trailCurve, maxTrailPoints - 1, 0.2, 8, false);
+        const trailMaterial = new THREE.ShaderMaterial({
+            uniforms: {
+                time: { value: 0 },
+                color: { value: new THREE.Color(0xffffff) }
+            },
+            vertexShader: `
+                varying float vUv;
+                void main() {
+                    vUv = uv.x;
+                    gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+                }
+            `,
+            fragmentShader: `
+                uniform float time;
+                uniform vec3 color;
+                varying float vUv;
+                void main() {
+                    float alpha = (1.0 - vUv) * 0.7;
+                    gl_FragColor = vec4(color, alpha);
+                }
+            `,
+            transparent: true,
+            blending: THREE.AdditiveBlending,
+            depthWrite: false,
+            side: THREE.DoubleSide
+        });
+        const trailMesh = new THREE.Mesh(trailGeometry, trailMaterial);
+        trailMesh.visible = false;
+        scene.add(trailMesh);
+        return { maxTrailPoints, trailPoints, trailCurve, trailGeometry, trailMaterial, trailMesh };
+    };
 
-    let trailMesh = new THREE.Mesh(trailGeometry, trailMaterial);
-    trailMesh.visible = false;
-    scene.add(trailMesh);
+    const userTrail = createTrail();
+
+    const automatedTrails: any[] = [];
+    const trailConfigs = [
+        { color: 0x00FFFF, rotation: new THREE.Euler(Math.PI / 4, Math.PI / 4, 0), radiusX: 30, radiusY: 20, speed: 0.1 },
+        { color: 0xFF00FF, rotation: new THREE.Euler(0, -Math.PI / 3, -Math.PI / 6), radiusX: 25, radiusY: 35, speed: 0.08 },
+        { color: 0xFFFF00, rotation: new THREE.Euler(Math.PI / 2, 0, Math.PI / 3), radiusX: 40, radiusY: 25, speed: 0.12 },
+    ];
+
+    trailConfigs.forEach(config => {
+        const trail = createTrail();
+        trail.trailMesh.visible = true;
+        (trail.trailMaterial.uniforms.color.value as THREE.Color).set(config.color);
+        automatedTrails.push({ ...trail, ...config });
+    });
 
     const onMouseMove = (event: MouseEvent) => {
       mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
@@ -170,15 +185,15 @@ const QuantaVis: React.FC = () => {
     };
     const onMouseDown = () => {
       isMouseDown = true;
-      trailMesh.visible = true;
+      userTrail.trailMesh.visible = true;
       const mousePoint = getMouseWorldPos();
-      for (let i = 0; i < maxTrailPoints; i++) {
-        trailPoints[i].copy(mousePoint);
+      for (let i = 0; i < userTrail.maxTrailPoints; i++) {
+        userTrail.trailPoints[i].copy(mousePoint);
       }
     };
     const onMouseUp = () => {
         isMouseDown = false;
-        trailMesh.visible = false;
+        userTrail.trailMesh.visible = false;
     };
     
     window.addEventListener('mousemove', onMouseMove);
@@ -211,8 +226,9 @@ const QuantaVis: React.FC = () => {
       const elapsedTime = clock.getElapsedTime();
 
       (material.uniforms.time as THREE.IUniform<number>).value = elapsedTime;
-      (trailMaterial.uniforms.time as THREE.IUniform<number>).value = elapsedTime;
-
+      (userTrail.trailMaterial.uniforms.time as THREE.IUniform<number>).value = elapsedTime;
+      automatedTrails.forEach(trail => (trail.trailMaterial.uniforms.time as THREE.IUniform<number>).value = elapsedTime);
+      
       const mousePoint = getMouseWorldPos();
       
       const pPositions = particles.geometry.attributes.position.array as Float32Array;
@@ -225,13 +241,23 @@ const QuantaVis: React.FC = () => {
       for (let i = 0; i < particleCount; i++) {
         const i3 = i * 3;
         const particlePos = new THREE.Vector3(pPositions[i3], pPositions[i3 + 1], pPositions[i3 + 2]);
-        const distVec = mousePoint.clone().sub(particlePos);
-        const distSq = distVec.lengthSq();
+        
+        let forceVec = new THREE.Vector3();
+        let forceActive = false;
+        
+        if (isMouseDown) {
+          const distVec = mousePoint.clone().sub(particlePos);
+          const distSq = distVec.lengthSq();
+          if (distSq < 400) { // Repulsion radius
+            const force = 30 / (distSq + 10);
+            forceVec.add(distVec.normalize().multiplyScalar(-force));
+            forceActive = true;
+          }
+        }
 
-        if (distSq < 100) {
-          const force = 10 / (distSq + 10);
-          velocities[i3] -= distVec.x * force * 0.1;
-          velocities[i3 + 1] -= distVec.y * force * 0.1;
+        if (forceActive) {
+            velocities[i3] += forceVec.x * 0.1;
+            velocities[i3 + 1] += forceVec.y * 0.1;
         }
         
         const noiseScale = 0.05;
@@ -246,11 +272,10 @@ const QuantaVis: React.FC = () => {
         velocities[i3 + 1] += noiseZ * curlStrength;
         velocities[i3 + 2] += noiseX * curlStrength;
         
-        // Center repulsion force to prevent clumping
         const centerVec = particlePos.clone().multiplyScalar(-1);
         const centerDistSq = particlePos.lengthSq();
         const repulsionStrength = 0.0001;
-        if (centerDistSq > 1) { // Avoid extreme force at the very center
+        if (centerDistSq > 1) {
             velocities[i3] += centerVec.x * repulsionStrength;
             velocities[i3 + 1] += centerVec.y * repulsionStrength;
             velocities[i3 + 2] += centerVec.z * repulsionStrength;
@@ -264,7 +289,6 @@ const QuantaVis: React.FC = () => {
         pPositions[i3 + 1] += velocities[i3 + 1];
         pPositions[i3 + 2] += velocities[i3 + 2];
 
-        // Boundary checks
         if (pPositions[i3] > boundingBox.max.x || pPositions[i3] < boundingBox.min.x) {
             pPositions[i3] = Math.max(boundingBox.min.x, Math.min(boundingBox.max.x, pPositions[i3]));
             velocities[i3] *= -0.5;
@@ -281,15 +305,30 @@ const QuantaVis: React.FC = () => {
       particles.geometry.attributes.position.needsUpdate = true;
       
       if (isMouseDown) {
-        trailPoints.shift();
-        trailPoints.push(mousePoint.clone());
-        
-        const newCurve = new THREE.CatmullRomCurve3(trailPoints);
-        const newGeometry = new THREE.TubeGeometry(newCurve, maxTrailPoints - 1, 0.2, 8, false);
-        
-        trailMesh.geometry.dispose();
-        trailMesh.geometry = newGeometry;
+        userTrail.trailPoints.shift();
+        userTrail.trailPoints.push(mousePoint.clone());
+        const newCurve = new THREE.CatmullRomCurve3(userTrail.trailPoints);
+        const newGeometry = new THREE.TubeGeometry(newCurve, userTrail.maxTrailPoints - 1, 0.2, 8, false);
+        userTrail.trailMesh.geometry.dispose();
+        userTrail.trailMesh.geometry = newGeometry;
       }
+
+      automatedTrails.forEach(trail => {
+          const t = elapsedTime * trail.speed;
+          const x = trail.radiusX * Math.cos(t);
+          const y = trail.radiusY * Math.sin(t);
+          const z = trail.radiusY * Math.sin(t) * Math.cos(t);
+          
+          const point = new THREE.Vector3(x, y, z).applyEuler(trail.rotation);
+          
+          trail.trailPoints.shift();
+          trail.trailPoints.push(point);
+
+          const newCurve = new THREE.CatmullRomCurve3(trail.trailPoints);
+          const newGeometry = new THREE.TubeGeometry(newCurve, trail.maxTrailPoints - 1, 0.2, 8, false);
+          trail.trailMesh.geometry.dispose();
+          trail.trailMesh.geometry = newGeometry;
+      });
 
       renderer.render(fadeScene, fadeCamera);
       composer.render();
@@ -322,7 +361,7 @@ const QuantaVis: React.FC = () => {
     };
   }, []);
 
-  return <div ref={mountRef} className="fixed top-0 left-0 w-full h-full" />;
+  return <div ref={mountRef} className="fixed top-0 left-0 w-full h-full -z-10" />;
 };
 
 export default QuantaVis;
