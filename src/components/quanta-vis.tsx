@@ -2,7 +2,6 @@
 
 import React, { useRef, useEffect } from 'react';
 import * as THREE from 'three';
-import * as Tone from 'tone';
 import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer.js';
 import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js';
 import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPass.js';
@@ -20,13 +19,12 @@ const QuantaVis: React.FC = () => {
     
     let isMouseDown = false;
     const mouse = new THREE.Vector2();
-    let synth: Tone.FMSynth | null = null;
 
     const scene = new THREE.Scene();
     scene.fog = new THREE.FogExp2(0x000a12, 0.02);
 
     const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-    camera.position.z = 50;
+    camera.position.z = 70; // Pushed camera farther back
     const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
     renderer.setSize(window.innerWidth, window.innerHeight);
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
@@ -166,29 +164,12 @@ const QuantaVis: React.FC = () => {
     trailMesh.visible = false;
     scene.add(trailMesh);
 
-    const setupAudio = async () => {
-      await Tone.start();
-      if (!synth) {
-        synth = new Tone.FMSynth({
-          harmonicity: 3.01,
-          modulationIndex: 14,
-          envelope: { attack: 0.01, decay: 0.2, release: 0.5 },
-          modulationEnvelope: { attack: 0.01, decay: 0.3, release: 0.5 },
-        }).toDestination();
-      }
-    };
-    window.addEventListener('mousedown', setupAudio, { once: true });
-    window.addEventListener('touchstart', setupAudio, { once: true });
-
     const onMouseMove = (event: MouseEvent) => {
       mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
       mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
     };
     const onMouseDown = () => {
       isMouseDown = true;
-      if (synth && Tone.context.state === 'running') {
-        synth.triggerAttackRelease('C2', '8n', Tone.now());
-      }
       trailMesh.visible = true;
       const mousePoint = getMouseWorldPos();
       for (let i = 0; i < maxTrailPoints; i++) {
@@ -321,8 +302,6 @@ const QuantaVis: React.FC = () => {
       window.removeEventListener('mousedown', onMouseDown);
       window.removeEventListener('mouseup', onMouseUp);
       window.removeEventListener('resize', onWindowResize);
-      window.removeEventListener('mousedown', setupAudio);
-      window.removeEventListener('touchstart', setupAudio);
       
       if (currentMount) {
         currentMount.removeChild(renderer.domElement);
@@ -347,3 +326,5 @@ const QuantaVis: React.FC = () => {
 };
 
 export default QuantaVis;
+
+    
