@@ -6,6 +6,7 @@ import * as Tone from 'tone';
 import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer.js';
 import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js';
 import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPass.js';
+import { SimplexNoise } from 'three/examples/jsm/math/SimplexNoise.js';
 
 const QuantaVis: React.FC = () => {
   const mountRef = useRef<HTMLDivElement>(null);
@@ -33,14 +34,12 @@ const QuantaVis: React.FC = () => {
 
     currentMount.appendChild(renderer.domElement);
     
-    // Post-processing for bloom/blur effect
     const renderScene = new RenderPass(scene, camera);
     const bloomPass = new UnrealBloomPass(new THREE.Vector2(window.innerWidth, window.innerHeight), 1.2, 0.2, 0.1);
     const composer = new EffectComposer(renderer);
     composer.addPass(renderScene);
     composer.addPass(bloomPass);
 
-    // Fading plane for motion blur trail effect
     const fadeMaterial = new THREE.MeshBasicMaterial({
       color: 0x000a12,
       transparent: true,
@@ -103,7 +102,6 @@ const QuantaVis: React.FC = () => {
                 float d = distance(gl_PointCoord, vec2(0.5, 0.5));
                 if (d > 0.5) discard;
                 float alpha = 1.0 - d * 2.0;
-                // Add a shimmering effect
                 alpha *= 0.7 + 0.3 * sin(time * 10.0 + gl_FragCoord.x);
                 gl_FragColor = vec4(vColor, alpha);
             }
@@ -197,6 +195,7 @@ const QuantaVis: React.FC = () => {
     window.addEventListener('resize', onWindowResize);
 
     const clock = new THREE.Clock();
+    const simplex = new SimplexNoise();
     
     const animate = () => {
       requestAnimationFrame(animate);
@@ -213,6 +212,11 @@ const QuantaVis: React.FC = () => {
       
       const pPositions = particles.geometry.attributes.position.array as Float32Array;
       
+      const boundingBox = new THREE.Box3(
+        new THREE.Vector3(-60, -40, -30),
+        new THREE.Vector3(60, 40, 30)
+      );
+
       for (let i = 0; i < particleCount; i++) {
         const i3 = i * 3;
         const particlePos = new THREE.Vector3(pPositions[i3], pPositions[i3 + 1], pPositions[i3 + 2]);
@@ -225,24 +229,39 @@ const QuantaVis: React.FC = () => {
           velocities[i3 + 1] -= distVec.y * force * 0.1;
         }
         
-        // Add swirling motion based on particle position and time
-        const swirlStrength = 0.02;
-        const swirlFrequency = 0.1;
-        const timeFactor = elapsedTime * 0.2;
+        const noiseScale = 0.05;
+        const timeFactor = elapsedTime * 0.1;
+        const curlStrength = 0.05;
+
+        const noiseX = simplex.noise3d(particlePos.x * noiseScale, particlePos.y * noiseScale, timeFactor);
+        const noiseY = simplex.noise3d(particlePos.y * noiseScale, particlePos.z * noiseScale, timeFactor);
+        const noiseZ = simplex.noise3d(particlePos.z * noiseScale, particlePos.x * noiseScale, timeFactor);
+
+        velocities[i3] += noiseY * curlStrength;
+        velocities[i3 + 1] += noiseZ * curlStrength;
+        velocities[i3 + 2] += noiseX * curlStrength;
         
-        velocities[i3] += Math.sin(pPositions[i3 + 1] * swirlFrequency + timeFactor) * swirlStrength;
-        velocities[i3 + 1] += Math.cos(pPositions[i3] * swirlFrequency + timeFactor) * swirlStrength;
-        velocities[i3 + 2] += Math.sin(pPositions[i3] * swirlFrequency + pPositions[i3+1] * swirlFrequency + timeFactor) * swirlStrength;
-
-
-        // Damping to simulate viscosity
-        velocities[i3] *= 0.94;
-        velocities[i3 + 1] *= 0.94;
-        velocities[i3 + 2] *= 0.94;
+        velocities[i3] *= 0.98;
+        velocities[i3 + 1] *= 0.98;
+        velocities[i3 + 2] *= 0.98;
 
         pPositions[i3] += velocities[i3];
         pPositions[i3 + 1] += velocities[i3 + 1];
         pPositions[i3 + 2] += velocities[i3 + 2];
+
+        // Boundary checks
+        if (pPositions[i3] > boundingBox.max.x || pPositions[i3] < boundingBox.min.x) {
+            pPositions[i3] = Math.max(boundingBox.min.x, Math.min(boundingBox.max.x, pPositions[i3]));
+            velocities[i3] *= -0.5;
+        }
+        if (pPositions[i3 + 1] > boundingBox.max.y || pPositions[i3 + 1] < boundingBox.min.y) {
+            pPositions[i3 + 1] = Math.max(boundingBox.min.y, Math.min(boundingBox.max.y, pPositions[i3 + 1]));
+            velocities[i3 + 1] *= -0.5;
+        }
+        if (pPositions[i3 + 2] > boundingBox.max.z || pPositions[i3 + 2] < boundingBox.min.z) {
+            pPositions[i3 + 2] = Math.max(boundingBox.min.z, Math.min(boundingBox.max.z, pPositions[i3 + 2]));
+            velocities[i3 + 2] *= -0.5;
+        }
       }
       particles.geometry.attributes.position.needsUpdate = true;
 
@@ -266,7 +285,6 @@ const QuantaVis: React.FC = () => {
       streaks.geometry.attributes.position.needsUpdate = true;
       streaks.geometry.attributes.lifetime.needsUpdate = true;
 
-      // Render the fade effect to create trails
       renderer.render(fadeScene, fadeCamera);
       composer.render();
     };
@@ -297,7 +315,7 @@ const QuantaVis: React.FC = () => {
     };
   }, []);
 
-  return <div ref={mountRef} className="fixed top-0 left-0 w-full h-full z-20" />;
+  return <div ref={mountRef} className="fixed top-0 left-0 w-full h-full z-0" />;
 };
 
 export default QuantaVis;
