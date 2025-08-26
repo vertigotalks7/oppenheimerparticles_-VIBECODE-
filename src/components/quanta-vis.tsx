@@ -6,7 +6,6 @@ import * as Tone from 'tone';
 import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer.js';
 import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js';
 import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPass.js';
-import { AfterimagePass } from 'three/examples/jsm/postprocessing/AfterimagePass.js';
 import { SimplexNoise } from 'three/examples/jsm/math/SimplexNoise.js';
 
 const QuantaVis: React.FC = () => {
@@ -37,11 +36,9 @@ const QuantaVis: React.FC = () => {
     
     const renderScene = new RenderPass(scene, camera);
     const bloomPass = new UnrealBloomPass(new THREE.Vector2(window.innerWidth, window.innerHeight), 1.2, 0.2, 0.1);
-    const afterimagePass = new AfterimagePass(0.85);
     const composer = new EffectComposer(renderer);
     composer.addPass(renderScene);
     composer.addPass(bloomPass);
-    composer.addPass(afterimagePass);
 
     const fadeMaterial = new THREE.MeshBasicMaterial({
       color: 0x000a12,
@@ -346,9 +343,7 @@ const QuantaVis: React.FC = () => {
     };
   }, []);
 
-  return <div ref={mountRef} className="fixed top-0 left-0 w-full h-full" />;
+  return <div ref={mountRef} className="fixed top-0 left-0 w-full h-full z-0" />;
 };
 
 export default QuantaVis;
-
-    
