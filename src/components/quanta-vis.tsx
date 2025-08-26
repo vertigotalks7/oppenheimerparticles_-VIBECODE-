@@ -225,22 +225,24 @@ const QuantaVis: React.FC = () => {
           velocities[i3 + 1] -= distVec.y * force * 0.1;
         }
         
-        // Add some random motion
-        velocities[i3] += (Math.random() - 0.5) * 0.01;
-        velocities[i3 + 1] += (Math.random() - 0.5) * 0.01;
-        velocities[i3 + 2] += (Math.random() - 0.5) * 0.01;
+        // Add swirling motion based on particle position and time
+        const swirlStrength = 0.02;
+        const swirlFrequency = 0.1;
+        const timeFactor = elapsedTime * 0.2;
+        
+        velocities[i3] += Math.sin(pPositions[i3 + 1] * swirlFrequency + timeFactor) * swirlStrength;
+        velocities[i3 + 1] += Math.cos(pPositions[i3] * swirlFrequency + timeFactor) * swirlStrength;
+        velocities[i3 + 2] += Math.sin(pPositions[i3] * swirlFrequency + pPositions[i3+1] * swirlFrequency + timeFactor) * swirlStrength;
 
-        // Damping
-        velocities[i3] *= 0.96;
-        velocities[i3 + 1] *= 0.96;
-        velocities[i3 + 2] *= 0.96;
+
+        // Damping to simulate viscosity
+        velocities[i3] *= 0.94;
+        velocities[i3 + 1] *= 0.94;
+        velocities[i3 + 2] *= 0.94;
 
         pPositions[i3] += velocities[i3];
         pPositions[i3 + 1] += velocities[i3 + 1];
         pPositions[i3 + 2] += velocities[i3 + 2];
-        
-        // Add wave motion
-        pPositions[i3+2] += Math.sin(elapsedTime * 0.5 + i) * 0.01;
       }
       particles.geometry.attributes.position.needsUpdate = true;
 
@@ -295,7 +297,7 @@ const QuantaVis: React.FC = () => {
     };
   }, []);
 
-  return <div ref={mountRef} className="fixed top-0 left-0 w-full h-full" />;
+  return <div ref={mountRef} className="fixed top-0 left-0 w-full h-full -z-10" />;
 };
 
 export default QuantaVis;
