@@ -127,7 +127,7 @@ const QuantaVis: React.FC = () => {
     scene.add(particles);
 
     const createTrail = () => {
-        const maxTrailPoints = 50;
+        const maxTrailPoints = 40;
         const trailPoints = Array.from({ length: maxTrailPoints }, () => new THREE.Vector3());
         const trailCurve = new THREE.CatmullRomCurve3(trailPoints);
         const trailGeometry = new THREE.TubeGeometry(trailCurve, maxTrailPoints - 1, 0.2, 8, false);
@@ -167,16 +167,16 @@ const QuantaVis: React.FC = () => {
 
     const automatedTrails: any[] = [];
     const trailConfigs = [
-        { color: 0xffffff, rotation: new THREE.Euler(Math.PI / 4, Math.PI / 4, 0), radiusX: 80, radiusY: 60, speed: 8 },
-        { color: 0xffffff, rotation: new THREE.Euler(0, -Math.PI / 3, -Math.PI / 6), radiusX: 70, radiusY: 90, speed: 7 },
-        { color: 0xffffff, rotation: new THREE.Euler(Math.PI / 2, 0, Math.PI / 3), radiusX: 100, radiusY: 70, speed: 9 },
+        { color: 0xffffff, rotation: new THREE.Euler(Math.PI / 4, Math.PI / 4, 0), radiusX: 100, radiusY: 80, speed: 28 },
+        { color: 0xffffff, rotation: new THREE.Euler(0, -Math.PI / 3, -Math.PI / 6), radiusX: 90, radiusY: 110, speed: 25 },
+        { color: 0xffffff, rotation: new THREE.Euler(Math.PI / 2, 0, Math.PI / 3), radiusX: 120, radiusY: 90, speed: 30 },
     ];
 
     trailConfigs.forEach(config => {
         const trail = createTrail();
         trail.trailMesh.visible = true;
         (trail.trailMaterial.uniforms.color.value as THREE.Color).set(config.color);
-        automatedTrails.push({ ...trail, ...config });
+        automatedTrails.push({ ...trail, ...config, baseRotation: config.rotation.clone() });
     });
 
     const onMouseMove = (event: MouseEvent) => {
@@ -319,6 +319,10 @@ const QuantaVis: React.FC = () => {
           const y = trail.radiusY * Math.sin(t);
           const z = trail.radiusY * Math.sin(t) * Math.cos(t);
           
+          const rotationSpeed = 0.05;
+          trail.rotation.x = trail.baseRotation.x + elapsedTime * rotationSpeed;
+          trail.rotation.y = trail.baseRotation.y + elapsedTime * rotationSpeed * 0.5;
+
           const point = new THREE.Vector3(x, y, z).applyEuler(trail.rotation);
           
           trail.trailPoints.shift();
@@ -365,3 +369,5 @@ const QuantaVis: React.FC = () => {
 };
 
 export default QuantaVis;
+
+    
