@@ -6,6 +6,7 @@ import * as Tone from 'tone';
 import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer.js';
 import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js';
 import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPass.js';
+import { AfterimagePass } from 'three/examples/jsm/postprocessing/AfterimagePass.js';
 import { SimplexNoise } from 'three/examples/jsm/math/SimplexNoise.js';
 
 const QuantaVis: React.FC = () => {
@@ -36,9 +37,11 @@ const QuantaVis: React.FC = () => {
     
     const renderScene = new RenderPass(scene, camera);
     const bloomPass = new UnrealBloomPass(new THREE.Vector2(window.innerWidth, window.innerHeight), 1.2, 0.2, 0.1);
+    const afterimagePass = new AfterimagePass(0.85);
     const composer = new EffectComposer(renderer);
     composer.addPass(renderScene);
     composer.addPass(bloomPass);
+    composer.addPass(afterimagePass);
 
     const fadeMaterial = new THREE.MeshBasicMaterial({
       color: 0x000a12,
@@ -231,7 +234,7 @@ const QuantaVis: React.FC = () => {
         
         const noiseScale = 0.05;
         const timeFactor = elapsedTime * 0.1;
-        const curlStrength = 0.03;
+        const curlStrength = 0.02;
 
         const noiseX = simplex.noise3d(particlePos.x * noiseScale, particlePos.y * noiseScale, timeFactor);
         const noiseY = simplex.noise3d(particlePos.y * noiseScale, particlePos.z * noiseScale, timeFactor);
@@ -241,9 +244,19 @@ const QuantaVis: React.FC = () => {
         velocities[i3 + 1] += noiseZ * curlStrength;
         velocities[i3 + 2] += noiseX * curlStrength;
         
-        velocities[i3] *= 0.96;
-        velocities[i3 + 1] *= 0.96;
-        velocities[i3 + 2] *= 0.96;
+        // Center repulsion force to prevent clumping
+        const centerVec = particlePos.clone().multiplyScalar(-1);
+        const centerDistSq = particlePos.lengthSq();
+        const repulsionStrength = 0.0001;
+        if (centerDistSq > 1) { // Avoid extreme force at the very center
+            velocities[i3] += centerVec.x * repulsionStrength;
+            velocities[i3 + 1] += centerVec.y * repulsionStrength;
+            velocities[i3 + 2] += centerVec.z * repulsionStrength;
+        }
+
+        velocities[i3] *= 0.97;
+        velocities[i3 + 1] *= 0.97;
+        velocities[i3 + 2] *= 0.97;
 
         pPositions[i3] += velocities[i3];
         pPositions[i3 + 1] += velocities[i3 + 1];
@@ -319,5 +332,3 @@ const QuantaVis: React.FC = () => {
 };
 
 export default QuantaVis;
-
-    
