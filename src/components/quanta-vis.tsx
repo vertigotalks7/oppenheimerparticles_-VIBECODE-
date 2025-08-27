@@ -3,7 +3,6 @@
 
 import React, { useRef, useEffect, useCallback } from 'react';
 import * as THREE from 'three';
-import * as Tone from 'tone';
 import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer.js';
 import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js';
 import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPass.js';
@@ -128,7 +127,7 @@ const QuantaVis: React.FC = () => {
                 float colorMix = 1.0 - smoothstep(0.0, hoverRadius, vMouseDist);
                 vec3 hoverColor = vec3(1.0, 0.3, 0.0); // Yellowish-red
 
-                vec3 finalColor = mix(vBaseColor, hoverColor, colorMix);
+                vec3 finalColor = mix(vBaseColor, hoverColor, colorMix * sharpness);
 
                 gl_FragColor = vec4(finalColor, alpha);
             }
@@ -241,10 +240,10 @@ const QuantaVis: React.FC = () => {
       const speedModulator = ((Math.sin(elapsedTime * 0.1) + 1) / 2) * 0.2 + 0.1;
 
       // Mouse interaction
-      const mouseWorld = new THREE.Vector3(mousePosition.current.x, mousePosition.current.y, 0);
+      const mouseWorld = new THREE.Vector3(mousePosition.current.x, mousePosition.current.y, 0.5);
       mouseWorld.unproject(camera);
       const dir = mouseWorld.sub(camera.position).normalize();
-      const distance = -camera.position.z / dir.z;
+      const distance = (30 - camera.position.z) / dir.z; // Project mouse to z=30 plane (mid-point of particles)
       const mouse3D = camera.position.clone().add(dir.multiplyScalar(distance));
       (material.uniforms.mousePos as THREE.IUniform<THREE.Vector3>).value.copy(mouse3D);
 
@@ -360,3 +359,5 @@ const QuantaVis: React.FC = () => {
 };
 
 export default QuantaVis;
+
+    
