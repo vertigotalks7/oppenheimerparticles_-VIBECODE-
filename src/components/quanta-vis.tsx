@@ -124,15 +124,35 @@ const QuantaVis: React.FC = () => {
     const particles = new THREE.Points(geometry, material);
     scene.add(particles);
 
-    const createTrail = () => {
+    const createTrail = (isUserTrail = false) => {
         const maxTrailPoints = 150;
         const trailPoints = Array.from({ length: maxTrailPoints }, () => new THREE.Vector3());
         const trailCurve = new THREE.CatmullRomCurve3(trailPoints);
         const trailGeometry = new THREE.TubeGeometry(trailCurve, maxTrailPoints - 1, 0.2, 8, false);
+        
+        const fragmentShader = isUserTrail
+            ? `
+                uniform vec3 color;
+                uniform float opacity;
+                void main() {
+                    gl_FragColor = vec4(color, opacity * 0.5);
+                }
+            `
+            : `
+                uniform float time;
+                uniform vec3 color;
+                uniform float opacity;
+                varying float vUv;
+                void main() {
+                    float alpha = pow(1.0 - vUv, 2.0) * 0.2 * opacity;
+                    gl_FragColor = vec4(color, alpha);
+                }
+            `;
+
         const trailMaterial = new THREE.ShaderMaterial({
             uniforms: {
                 time: { value: 0 },
-                color: { value: new THREE.Color(0x7DD3FC) },
+                color: { value: new THREE.Color(isUserTrail ? 0xffffff : 0x7DD3FC) },
                 opacity: { value: 0.0 }
             },
             vertexShader: `
@@ -142,16 +162,7 @@ const QuantaVis: React.FC = () => {
                     gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
                 }
             `,
-            fragmentShader: `
-                uniform float time;
-                uniform vec3 color;
-                uniform float opacity;
-                varying float vUv;
-                void main() {
-                    float alpha = pow(1.0 - vUv, 2.0) * 0.2 * opacity;
-                    gl_FragColor = vec4(color, alpha);
-                }
-            `,
+            fragmentShader,
             transparent: true,
             blending: THREE.AdditiveBlending,
             depthWrite: false,
@@ -163,7 +174,7 @@ const QuantaVis: React.FC = () => {
         return { maxTrailPoints, trailPoints, trailCurve, trailGeometry, trailMaterial, trailMesh };
     };
 
-    const userTrail = createTrail();
+    const userTrail = createTrail(true);
     (userTrail.trailMaterial.uniforms.opacity as THREE.IUniform<number>).value = 1.0;
 
     const automatedTrails: any[] = [];
@@ -380,5 +391,3 @@ const QuantaVis: React.FC = () => {
 };
 
 export default QuantaVis;
-
-    
