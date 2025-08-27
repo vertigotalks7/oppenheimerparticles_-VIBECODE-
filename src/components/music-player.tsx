@@ -11,31 +11,16 @@ export default function MusicPlayer() {
   useEffect(() => {
     const audioElement = audioRef.current;
     if (audioElement) {
-        // We set the initial state to false, as autoplay is unreliable.
-        // The user will click to start.
-        const handleCanPlay = () => {
-             audioElement.play().then(() => {
-                // Autoplay started successfully.
-             }).catch(error => {
-                console.warn("Autoplay was prevented. User must interact to start music.");
-                setIsPlaying(false);
-             });
-        };
-        
-        // Use an event listener to wait until the browser can actually play the file
-        audioElement.addEventListener('canplay', handleCanPlay, { once: true });
+      const handlePlay = () => setIsPlaying(true);
+      const handlePause = () => setIsPlaying(false);
 
-        const handlePlay = () => setIsPlaying(true);
-        const handlePause = () => setIsPlaying(false);
-
-        audioElement.addEventListener('play', handlePlay);
-        audioElement.addEventListener('pause', handlePause);
+      audioElement.addEventListener('play', handlePlay);
+      audioElement.addEventListener('pause', handlePause);
 
       return () => {
-        if(audioElement) {
-            audioElement.removeEventListener('canplay', handleCanPlay);
-            audioElement.removeEventListener('play', handlePlay);
-            audioElement.removeEventListener('pause', handlePause);
+        if (audioElement) {
+          audioElement.removeEventListener('play', handlePlay);
+          audioElement.removeEventListener('pause', handlePause);
         }
       };
     }
@@ -49,7 +34,6 @@ export default function MusicPlayer() {
       } else {
         audioElement.play();
       }
-      // The playing state will be updated by the 'play'/'pause' event listeners
     }
   };
 
