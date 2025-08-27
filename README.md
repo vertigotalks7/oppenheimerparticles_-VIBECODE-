@@ -2,7 +2,7 @@
 
 An immersive and interactive particle simulation inspired by the quantum world, brought to life through a unique collaboration between a developer and an AI. Move your mouse to influence thousands of particles and witness beautiful, emergent behavior.
 
-![QuantaVis Simulation](https://picsum.photos/1200/600)
+![QuantaVis Simulation](/home/user/studio/public/Screenshot 2025-08-27 113732.png)
 *<p align="center">An example of the particle simulation in action.</p>*
 
 ---
