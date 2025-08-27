@@ -85,7 +85,16 @@ export default function Home() {
           >
             vertigotalks7
           </a>{' '}
-          & an AI through vibe coding.
+          &{' '}
+          <a
+            href="https://firebase.google.com/studio"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="underline hover:text-cyan-100/80 transition-colors"
+          >
+            Firebase Studio
+          </a>{' '}
+          through vibe coding.
         </p>
       </div>
     </main>
