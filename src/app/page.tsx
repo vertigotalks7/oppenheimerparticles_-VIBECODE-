@@ -97,7 +97,7 @@ export default function Home() {
           through vibe coding.
         </p>
         <p className="mt-2 text-xs text-cyan-100/50">
-          Crafted in 15 prompts.
+          Crafted in 15 prompts with 8 debugs.
         </p>
       </div>
     </main>
