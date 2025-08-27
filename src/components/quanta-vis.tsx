@@ -2,6 +2,7 @@
 
 import React, { useRef, useEffect, useCallback } from 'react';
 import * as THREE from 'three';
+import * as Tone from 'tone';
 import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer.js';
 import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js';
 import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPass.js';
@@ -9,9 +10,17 @@ import { SimplexNoise } from 'three/examples/jsm/math/SimplexNoise.js';
 
 const QuantaVis: React.FC = () => {
   const mountRef = useRef<HTMLDivElement>(null);
+  const mousePosition = useRef(new THREE.Vector2(10000, 10000));
+  const interactionSynth = useRef<Tone.Synth | null>(null);
 
   useEffect(() => {
     if (!mountRef.current) return;
+
+    interactionSynth.current = new Tone.Synth({
+      oscillator: { type: 'sine' },
+      envelope: { attack: 0.005, decay: 0.1, sustain: 0.3, release: 0.2 },
+    }).toDestination();
+    interactionSynth.current.volume.value = -20;
 
     const currentMount = mountRef.current;
 
@@ -184,9 +193,19 @@ const QuantaVis: React.FC = () => {
     };
     window.addEventListener('resize', onWindowResize);
 
+    const onMouseMove = (event: MouseEvent) => {
+        mousePosition.current.x = (event.clientX / window.innerWidth) * 2 - 1;
+        mousePosition.current.y = -(event.clientY / window.innerHeight) * 2 + 1;
+    };
+    window.addEventListener('mousemove', onMouseMove);
+
+
     const clock = new THREE.Clock();
     const simplex = new SimplexNoise();
     
+    let interactionSoundPlayed = false;
+    let lastInteractionTime = 0;
+
     const animate = () => {
       requestAnimationFrame(animate);
       const deltaTime = clock.getDelta();
@@ -209,11 +228,30 @@ const QuantaVis: React.FC = () => {
         new THREE.Vector3(60, 40, 40)
       );
       
-      const speedModulator = ((Math.sin(elapsedTime * 0.1) + 1) / 2) * 0.7 + 0.1;
+      const speedModulator = ((Math.sin(elapsedTime * 0.1) + 1) / 2) * 0.4 + 0.1;
+
+      // Mouse interaction
+      const mouseWorld = new THREE.Vector3(mousePosition.current.x, mousePosition.current.y, 0);
+      mouseWorld.unproject(camera);
+      const dir = mouseWorld.sub(camera.position).normalize();
+      const distance = -camera.position.z / dir.z;
+      const mouse3D = camera.position.clone().add(dir.multiplyScalar(distance));
+
+      let particlesInteracted = 0;
 
       for (let i = 0; i < particleCount; i++) {
         const i3 = i * 3;
         const particlePos = new THREE.Vector3(pPositions[i3], pPositions[i3 + 1], pPositions[i3 + 2]);
+
+        const distanceToMouse = particlePos.distanceTo(mouse3D);
+        if (distanceToMouse < 15) {
+            const repelForce = (1 - distanceToMouse / 15) * 0.1;
+            const repelVec = particlePos.clone().sub(mouse3D).normalize().multiplyScalar(repelForce);
+            velocities[i3] += repelVec.x;
+            velocities[i3 + 1] += repelVec.y;
+            velocities[i3 + 2] += repelVec.z;
+            particlesInteracted++;
+        }
         
         const noiseScale = 0.05;
         const timeFactor = elapsedTime * 0.1;
@@ -259,6 +297,14 @@ const QuantaVis: React.FC = () => {
       }
       particles.geometry.attributes.position.needsUpdate = true;
       
+      if (particlesInteracted > 10 && elapsedTime > lastInteractionTime + 0.1) {
+        if (interactionSynth.current) {
+            const note = 440 + Math.sin(elapsedTime * 2) * 100;
+            interactionSynth.current.triggerAttackRelease(note, "32n", Tone.now());
+            lastInteractionTime = elapsedTime;
+        }
+      }
+
       automatedTrails.forEach(trail => {
           const t = elapsedTime * trail.speed / 1000;
           const x = trail.radiusX * Math.cos(t);
@@ -288,6 +334,7 @@ const QuantaVis: React.FC = () => {
 
     return () => {
       window.removeEventListener('resize', onWindowResize);
+      window.removeEventListener('mousemove', onMouseMove);
       
       if (currentMount) {
         currentMount.removeChild(renderer.domElement);
