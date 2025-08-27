@@ -22,7 +22,7 @@ const QuantaVis: React.FC = () => {
     const mouse = new THREE.Vector2();
 
     const scene = new THREE.Scene();
-    scene.fog = new THREE.FogExp2(0x000022, 0.02);
+    scene.fog = new THREE.FogExp2(0x0a0f1e, 0.02);
 
     const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
     camera.position.z = 70;
@@ -40,7 +40,7 @@ const QuantaVis: React.FC = () => {
     composer.addPass(bloomPass);
 
     const fadeMaterial = new THREE.MeshBasicMaterial({
-      color: 0x000022,
+      color: 0x0a0f1e,
       transparent: true,
       opacity: 0.1
     });
@@ -357,6 +357,8 @@ const QuantaVis: React.FC = () => {
 };
 
 export default QuantaVis;
+
+    
 
     
 
