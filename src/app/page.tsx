@@ -5,6 +5,8 @@ import dynamic from 'next/dynamic';
 import { Sparkles } from 'lucide-react';
 import SimulationWarning from '@/components/simulation-warning';
 
+// By defining the dynamic imports here, Next.js will start preloading them
+// as soon as the Home component is evaluated, even while the warning is shown.
 const QuantaVis = dynamic(() => import('@/components/quanta-vis'), {
   ssr: false,
 });
