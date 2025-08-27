@@ -15,7 +15,7 @@ export default function MusicPlayer() {
         // The user will click to start.
         const handleCanPlay = () => {
              audioElement.play().then(() => {
-                setIsPlaying(true);
+                // Autoplay started successfully.
              }).catch(error => {
                 console.warn("Autoplay was prevented. User must interact to start music.");
                 setIsPlaying(false);
