@@ -127,7 +127,7 @@ const QuantaVis: React.FC = () => {
     scene.add(particles);
 
     const createTrail = () => {
-        const maxTrailPoints = 50;
+        const maxTrailPoints = 80;
         const trailPoints = Array.from({ length: maxTrailPoints }, () => new THREE.Vector3());
         const trailCurve = new THREE.CatmullRomCurve3(trailPoints);
         const trailGeometry = new THREE.TubeGeometry(trailCurve, maxTrailPoints - 1, 0.2, 8, false);
@@ -167,9 +167,9 @@ const QuantaVis: React.FC = () => {
 
     const automatedTrails: any[] = [];
     const trailConfigs = [
-        { color: 0xffffff, rotation: new THREE.Euler(Math.PI / 4, Math.PI / 4, 0), radiusX: 100, radiusY: 80, speed: 42 },
-        { color: 0xffffff, rotation: new THREE.Euler(0, -Math.PI / 3, -Math.PI / 6), radiusX: 90, radiusY: 110, speed: 39 },
-        { color: 0xffffff, rotation: new THREE.Euler(Math.PI / 2, 0, Math.PI / 3), radiusX: 120, radiusY: 90, speed: 45 },
+        { color: 0xffffff, rotation: new THREE.Euler(Math.random() * Math.PI * 2, Math.random() * Math.PI * 2, Math.random() * Math.PI * 2), radiusX: 120, radiusY: 100, speed: 50 },
+        { color: 0xffffff, rotation: new THREE.Euler(Math.random() * Math.PI * 2, Math.random() * Math.PI * 2, Math.random() * Math.PI * 2), radiusX: 110, radiusY: 130, speed: 47 },
+        { color: 0xffffff, rotation: new THREE.Euler(Math.random() * Math.PI * 2, Math.random() * Math.PI * 2, Math.random() * Math.PI * 2), radiusX: 140, radiusY: 110, speed: 53 },
     ];
 
     trailConfigs.forEach(config => {
@@ -314,7 +314,7 @@ const QuantaVis: React.FC = () => {
       }
 
       automatedTrails.forEach(trail => {
-          const t = elapsedTime * trail.speed / 10;
+          const t = elapsedTime * trail.speed / 100;
           const x = trail.radiusX * Math.cos(t);
           const y = trail.radiusY * Math.sin(t);
           const z = trail.radiusY * Math.sin(t) * Math.cos(t);
@@ -369,6 +369,8 @@ const QuantaVis: React.FC = () => {
 };
 
 export default QuantaVis;
+
+    
 
     
 
