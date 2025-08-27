@@ -238,7 +238,7 @@ const QuantaVis: React.FC = () => {
         new THREE.Vector3(60, 40, 40)
       );
       
-      const speedModulator = ((Math.sin(elapsedTime * 0.5) + 1) / 2) * 1.4 + 0.1; // Ranges from 0.1 to 1.5
+      const speedModulator = ((Math.sin(elapsedTime * 0.1) + 1) / 2) * 1.4 + 0.1;
 
       for (let i = 0; i < particleCount; i++) {
         const i3 = i * 3;
