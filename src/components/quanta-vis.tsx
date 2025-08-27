@@ -91,7 +91,7 @@ const QuantaVis: React.FC = () => {
                 vBaseColor = baseColor;
                 vec4 modelViewPosition = modelViewMatrix * vec4(position, 1.0);
                 gl_Position = projectionMatrix * modelViewPosition;
-                gl_PointSize = scale * ( 300.0 / -modelViewPosition.z );
+                gl_PointSize = scale * ( 250.0 / -modelViewPosition.z );
             }
         `,
         fragmentShader: `
@@ -356,3 +356,5 @@ const QuantaVis: React.FC = () => {
 };
 
 export default QuantaVis;
+
+    
