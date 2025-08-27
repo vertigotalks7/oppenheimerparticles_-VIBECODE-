@@ -134,7 +134,7 @@ const QuantaVis: React.FC = () => {
         const trailMaterial = new THREE.ShaderMaterial({
             uniforms: {
                 time: { value: 0 },
-                color: { value: new THREE.Color(0xffffff) }
+                color: { value: new THREE.Color(0x00ffff) }
             },
             vertexShader: `
                 varying float vUv;
@@ -148,7 +148,7 @@ const QuantaVis: React.FC = () => {
                 uniform vec3 color;
                 varying float vUv;
                 void main() {
-                    float alpha = (1.0 - vUv) * 0.7;
+                    float alpha = pow(1.0 - vUv, 2.0) * 0.5;
                     gl_FragColor = vec4(color, alpha);
                 }
             `,
@@ -167,9 +167,9 @@ const QuantaVis: React.FC = () => {
 
     const automatedTrails: any[] = [];
     const trailConfigs = [
-        { color: 0xffffff, rotation: new THREE.Euler(Math.random() * Math.PI * 2, Math.random() * Math.PI * 2, Math.random() * Math.PI * 2), radiusX: 120, radiusY: 100, speed: 50 },
-        { color: 0xffffff, rotation: new THREE.Euler(Math.random() * Math.PI * 2, Math.random() * Math.PI * 2, Math.random() * Math.PI * 2), radiusX: 110, radiusY: 130, speed: 47 },
-        { color: 0xffffff, rotation: new THREE.Euler(Math.random() * Math.PI * 2, Math.random() * Math.PI * 2, Math.random() * Math.PI * 2), radiusX: 140, radiusY: 110, speed: 53 },
+        { color: 0x00ffff, rotation: new THREE.Euler(Math.random() * Math.PI * 2, Math.random() * Math.PI * 2, Math.random() * Math.PI * 2), radiusX: 120, radiusY: 100, speed: 100 },
+        { color: 0x00ffff, rotation: new THREE.Euler(Math.random() * Math.PI * 2, Math.random() * Math.PI * 2, Math.random() * Math.PI * 2), radiusX: 110, radiusY: 130, speed: 94 },
+        { color: 0x00ffff, rotation: new THREE.Euler(Math.random() * Math.PI * 2, Math.random() * Math.PI * 2, Math.random() * Math.PI * 2), radiusX: 140, radiusY: 110, speed: 106 },
     ];
 
     trailConfigs.forEach(config => {
@@ -369,11 +369,3 @@ const QuantaVis: React.FC = () => {
 };
 
 export default QuantaVis;
-
-    
-
-    
-
-    
-
-    
