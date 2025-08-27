@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from 'react';
-import { Music, Play, Pause } from 'lucide-react';
+import { Play, Pause } from 'lucide-react';
 import { Button } from './ui/button';
 
 export default function MusicPlayer() {
@@ -10,36 +10,43 @@ export default function MusicPlayer() {
 
   useEffect(() => {
     const audioElement = audioRef.current;
-    if (audioElement) {
-      const handlePlay = () => setIsPlaying(true);
-      const handlePause = () => setIsPlaying(false);
+    if (!audioElement) return;
 
-      audioElement.addEventListener('play', handlePlay);
-      audioElement.addEventListener('pause', handlePause);
+    const onPlay = () => setIsPlaying(true);
+    const onPause = () => setIsPlaying(false);
+    const onError = (e: Event) => {
+      console.error("Audio player error:", e);
+    };
 
-      return () => {
-        if (audioElement) {
-          audioElement.removeEventListener('play', handlePlay);
-          audioElement.removeEventListener('pause', handlePause);
-        }
-      };
-    }
+    audioElement.addEventListener('play', onPlay);
+    audioElement.addEventListener('pause', onPause);
+    audioElement.addEventListener('error', onError);
+
+    // Initial state check in case of browser state inconsistencies
+    setIsPlaying(!audioElement.paused);
+
+    return () => {
+      audioElement.removeEventListener('play', onPlay);
+      audioElement.removeEventListener('pause', onPause);
+      audioElement.removeEventListener('error', onError);
+    };
   }, []);
 
   const togglePlayPause = () => {
     const audioElement = audioRef.current;
     if (audioElement) {
-      if (isPlaying) {
-        audioElement.pause();
+      if (audioElement.paused) {
+        audioElement.play().catch(error => {
+          console.error("Error attempting to play audio:", error);
+        });
       } else {
-        audioElement.play();
+        audioElement.pause();
       }
     }
   };
 
   return (
     <div className="fixed bottom-4 right-4 z-30">
-      {/* The audio element is not visible */}
       <audio ref={audioRef} src="/videoplayback.m4a" loop playsInline />
       
       <Button 
@@ -47,6 +54,7 @@ export default function MusicPlayer() {
         variant="outline" 
         size="icon" 
         className="bg-black/50 backdrop-blur-md text-white hover:bg-white/20 border border-white/10 shadow-lg"
+        aria-label={isPlaying ? "Pause music" : "Play music"}
       >
         {isPlaying ? <Pause className="h-5 w-5" /> : <Play className="h-5 w-5" />}
       </Button>
