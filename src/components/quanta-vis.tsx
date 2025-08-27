@@ -64,7 +64,9 @@ const QuantaVis: React.FC = () => {
       const i3 = i * 3;
       positions[i3] = (Math.random() - 0.5) * 100;
       positions[i3 + 1] = (Math.random() - 0.5) * 100;
-      positions[i3 + 2] = (Math.random() - 0.5) * 60 - 30;
+      // Skew the z-distribution so more particles are farther away
+      const skewedRandom = Math.pow(Math.random(), 2);
+      positions[i3 + 2] = (skewedRandom - 0.5) * 60 - 30;
 
       const color = colorPalette[Math.floor(Math.random() * colorPalette.length)];
       baseColors[i3] = color.r;
