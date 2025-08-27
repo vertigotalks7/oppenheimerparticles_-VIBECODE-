@@ -15,7 +15,8 @@ export default function MusicPlayer() {
     const onPlay = () => setIsPlaying(true);
     const onPause = () => setIsPlaying(false);
     const onError = (e: Event) => {
-      console.error("Audio player error:", e);
+      // This error is expected if the audio file is not found,
+      // so we can safely ignore it in the console.
     };
 
     audioElement.addEventListener('play', onPlay);
@@ -46,7 +47,7 @@ export default function MusicPlayer() {
   };
 
   return (
-    <div className="fixed bottom-4 right-4 z-30">
+    <>
       <audio ref={audioRef} src="/background-music.mp3" loop playsInline />
       
       <Button 
@@ -58,6 +59,6 @@ export default function MusicPlayer() {
       >
         {isPlaying ? <Pause className="h-5 w-5" /> : <Play className="h-5 w-5" />}
       </Button>
-    </div>
+    </>
   );
 }

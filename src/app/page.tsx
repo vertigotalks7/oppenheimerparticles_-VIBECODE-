@@ -2,8 +2,10 @@
 
 import { useState, Suspense } from 'react';
 import dynamic from 'next/dynamic';
-import { Sparkles } from 'lucide-react';
+import { Sparkles, Youtube } from 'lucide-react';
 import SimulationWarning from '@/components/simulation-warning';
+import Link from 'next/link';
+import { Button } from '@/components/ui/button';
 
 // By defining the dynamic imports here, Next.js will start preloading them
 // as soon as the Home component is evaluated, even while the warning is shown.
@@ -58,9 +60,23 @@ export default function Home() {
         <PomodoroTimer />
       </Suspense>
 
-      <Suspense fallback={null}>
-        <MusicPlayer />
-      </Suspense>
+      <div className="fixed bottom-4 right-4 z-30 flex items-center space-x-2">
+        <Suspense fallback={null}>
+          <MusicPlayer />
+        </Suspense>
+        <Button 
+          asChild
+          variant="outline" 
+          size="icon" 
+          className="bg-black/50 backdrop-blur-md text-white hover:bg-white/20 border border-white/10 shadow-lg"
+          aria-label="Inspiration"
+        >
+          <Link href="https://www.youtube.com/watch?v=FN1fkSSO-Eo" target="_blank" rel="noopener noreferrer">
+            <Youtube className="h-5 w-5" />
+          </Link>
+        </Button>
+      </div>
+
 
       <div
         className={`relative z-20 flex flex-col items-center text-center p-8 bg-black/20 backdrop-blur-md rounded-xl border border-white/10 shadow-lg transition-all duration-700 ease-in-out ${
@@ -97,7 +113,7 @@ export default function Home() {
           through vibe coding.
         </p>
         <p className="mt-2 text-xs text-cyan-100/50">
-          Crafted in 15 prompts with 8 debugs.
+          Crafted in 25 prompts with 12 debugs.
         </p>
       </div>
     </main>
