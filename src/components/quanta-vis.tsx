@@ -80,16 +80,27 @@ const QuantaVis: React.FC = () => {
     const material = new THREE.ShaderMaterial({
         uniforms: {
             time: { value: 1.0 },
+            mousePos: { value: new THREE.Vector3(10000, 10000, 0) }
         },
         vertexShader: `
             attribute float scale;
             attribute vec3 baseColor;
+            
+            uniform vec3 mousePos;
+
             varying vec3 vBaseColor;
             varying float vDepth;
+            varying float vMouseDist;
+
             void main() {
                 vBaseColor = baseColor;
+                
                 vec4 modelViewPosition = modelViewMatrix * vec4(position, 1.0);
                 vDepth = -modelViewPosition.z;
+
+                vec4 mouseProjected = modelViewMatrix * vec4(mousePos, 1.0);
+                vMouseDist = distance(modelViewPosition.xyz, mouseProjected.xyz);
+
                 gl_Position = projectionMatrix * modelViewPosition;
                 float size = scale * ( 300.0 / -modelViewPosition.z );
                 gl_PointSize = max(1.0, size * 0.8);
@@ -98,6 +109,8 @@ const QuantaVis: React.FC = () => {
         fragmentShader: `
             varying vec3 vBaseColor;
             varying float vDepth;
+            varying float vMouseDist;
+
             void main() {
                 float d = distance(gl_PointCoord, vec2(0.5, 0.5));
                 
@@ -111,7 +124,13 @@ const QuantaVis: React.FC = () => {
                 
                 float alpha = pow(1.0 - d * 2.0, sharpness);
                 
-                gl_FragColor = vec4(vBaseColor, alpha);
+                float hoverRadius = 15.0;
+                float colorMix = 1.0 - smoothstep(0.0, hoverRadius, vMouseDist);
+                vec3 hoverColor = vec3(1.0, 0.3, 0.0); // Yellowish-red
+
+                vec3 finalColor = mix(vBaseColor, hoverColor, colorMix);
+
+                gl_FragColor = vec4(finalColor, alpha);
             }
         `,
         transparent: true,
@@ -219,7 +238,7 @@ const QuantaVis: React.FC = () => {
         new THREE.Vector3(60, 40, 40)
       );
       
-      const speedModulator = ((Math.sin(elapsedTime * 0.1) + 1) / 2) * 0.4 + 0.1;
+      const speedModulator = ((Math.sin(elapsedTime * 0.1) + 1) / 2) * 0.2 + 0.1;
 
       // Mouse interaction
       const mouseWorld = new THREE.Vector3(mousePosition.current.x, mousePosition.current.y, 0);
@@ -227,6 +246,7 @@ const QuantaVis: React.FC = () => {
       const dir = mouseWorld.sub(camera.position).normalize();
       const distance = -camera.position.z / dir.z;
       const mouse3D = camera.position.clone().add(dir.multiplyScalar(distance));
+      (material.uniforms.mousePos as THREE.IUniform<THREE.Vector3>).value.copy(mouse3D);
 
 
       for (let i = 0; i < particleCount; i++) {
