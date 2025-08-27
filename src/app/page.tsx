@@ -6,7 +6,7 @@ import { Sparkles } from 'lucide-react';
 
 const QuantaVis = dynamic(() => import('@/components/quanta-vis'), {
   ssr: false,
-  loading: () => <div className="fixed top-0 left-0 w-full h-full bg-background z-10" />,
+  loading: () => <div className="fixed top-0 left-0 w-full h-full bg-background z-0" />,
 });
 
 const PomodoroTimer = dynamic(() => import('@/components/pomodoro-timer'), {
