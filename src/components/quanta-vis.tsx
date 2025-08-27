@@ -16,8 +16,6 @@ const QuantaVis: React.FC = () => {
 
     const currentMount = mountRef.current;
     
-    let isMouseDown = false;
-    let isFadingOut = false;
     const mouse = new THREE.Vector2();
 
     const scene = new THREE.Scene();
@@ -125,35 +123,27 @@ const QuantaVis: React.FC = () => {
     const particles = new THREE.Points(geometry, material);
     scene.add(particles);
 
-    const createTrail = (isUserTrail = false) => {
+    const createTrail = () => {
         const maxTrailPoints = 150;
         const trailPoints = Array.from({ length: maxTrailPoints }, () => new THREE.Vector3());
         const trailCurve = new THREE.CatmullRomCurve3(trailPoints);
         const trailGeometry = new THREE.TubeGeometry(trailCurve, maxTrailPoints - 1, 0.2, 8, false);
         
-        const fragmentShader = isUserTrail
-            ? `
-                uniform vec3 color;
-                uniform float opacity;
-                void main() {
-                    gl_FragColor = vec4(color, opacity);
-                }
-            `
-            : `
-                uniform float time;
-                uniform vec3 color;
-                uniform float opacity;
-                varying float vUv;
-                void main() {
-                    float alpha = pow(1.0 - vUv, 2.0) * 0.2 * opacity;
-                    gl_FragColor = vec4(color, alpha);
-                }
-            `;
+        const fragmentShader = `
+            uniform float time;
+            uniform vec3 color;
+            uniform float opacity;
+            varying float vUv;
+            void main() {
+                float alpha = pow(1.0 - vUv, 2.0) * 0.2 * opacity;
+                gl_FragColor = vec4(color, alpha);
+            }
+        `;
 
         const trailMaterial = new THREE.ShaderMaterial({
             uniforms: {
                 time: { value: 0 },
-                color: { value: new THREE.Color(isUserTrail ? 0xffffff : 0x7DD3FC) },
+                color: { value: new THREE.Color(0x7DD3FC) },
                 opacity: { value: 0.0 }
             },
             vertexShader: `
@@ -175,8 +165,6 @@ const QuantaVis: React.FC = () => {
         return { maxTrailPoints, trailPoints, trailCurve, trailGeometry, trailMaterial, trailMesh };
     };
 
-    const userTrail = createTrail(true);
-
     const automatedTrails: any[] = [];
     const trailConfigs = [
         { color: 0x7DD3FC, rotation: new THREE.Euler(Math.random() * Math.PI * 2, Math.random() * Math.PI * 2, Math.random() * Math.PI * 2), radiusX: 120, radiusY: 100, speed: 1800 },
@@ -190,37 +178,13 @@ const QuantaVis: React.FC = () => {
         (trail.trailMaterial.uniforms.color.value as THREE.Color).set(config.color);
         automatedTrails.push({ ...trail, ...config, baseRotation: config.rotation.clone() });
     });
-    
-    const getMouseWorldPos = () => {
-        const mouseWorldPos = new THREE.Vector3(mouse.x, mouse.y, 0.5);
-        mouseWorldPos.unproject(camera);
-        const dir = mouseWorldPos.sub(camera.position).normalize();
-        const distance = -camera.position.z / dir.z;
-        return camera.position.clone().add(dir.multiplyScalar(distance));
-    }
 
     const onMouseMove = (event: MouseEvent) => {
       mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
       mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
     };
-    const onMouseDown = () => {
-      isMouseDown = true;
-      isFadingOut = false;
-      (userTrail.trailMaterial.uniforms.opacity as THREE.IUniform<number>).value = 1.0;
-      userTrail.trailMesh.visible = true;
-      const mousePoint = getMouseWorldPos();
-      for (let i = 0; i < userTrail.maxTrailPoints; i++) {
-        userTrail.trailPoints[i].copy(mousePoint);
-      }
-    };
-    const onMouseUp = () => {
-        isMouseDown = false;
-        isFadingOut = true;
-    };
     
     window.addEventListener('mousemove', onMouseMove);
-    window.addEventListener('mousedown', onMouseDown);
-    window.addEventListener('mouseup', onMouseUp);
 
     const onWindowResize = () => {
       camera.aspect = window.innerWidth / window.innerHeight;
@@ -241,7 +205,7 @@ const QuantaVis: React.FC = () => {
       const elapsedTime = clock.getElapsedTime();
 
       (material.uniforms.time as THREE.IUniform<number>).value = elapsedTime;
-      (userTrail.trailMaterial.uniforms.time as THREE.IUniform<number>).value = elapsedTime;
+
       automatedTrails.forEach(trail => {
           (trail.trailMaterial.uniforms.time as THREE.IUniform<number>).value = elapsedTime;
           const opacityUniform = (trail.trailMaterial.uniforms.opacity as THREE.IUniform<number>);
@@ -249,8 +213,6 @@ const QuantaVis: React.FC = () => {
             opacityUniform.value += deltaTime * 0.5;
           }
       });
-      
-      const mousePoint = getMouseWorldPos();
       
       const pPositions = particles.geometry.attributes.position.array as Float32Array;
       
@@ -309,26 +271,6 @@ const QuantaVis: React.FC = () => {
       }
       particles.geometry.attributes.position.needsUpdate = true;
       
-      if (isMouseDown) {
-        userTrail.trailPoints.shift();
-        userTrail.trailPoints.push(mousePoint.clone());
-        const newCurve = new THREE.CatmullRomCurve3(userTrail.trailPoints);
-        const newGeometry = new THREE.TubeGeometry(newCurve, userTrail.maxTrailPoints - 1, 0.2, 8, false);
-        userTrail.trailMesh.geometry.dispose();
-        userTrail.trailMesh.geometry = newGeometry;
-      }
-      
-      if (isFadingOut) {
-        const opacityUniform = (userTrail.trailMaterial.uniforms.opacity as THREE.IUniform<number>);
-        if (opacityUniform.value > 0) {
-          opacityUniform.value -= deltaTime * 2.0; // Fade out over ~0.5 seconds
-        } else {
-          opacityUniform.value = 0;
-          isFadingOut = false;
-          userTrail.trailMesh.visible = false;
-        }
-      }
-
       automatedTrails.forEach(trail => {
           const t = elapsedTime * trail.speed / 1000;
           const x = trail.radiusX * Math.cos(t);
@@ -358,8 +300,6 @@ const QuantaVis: React.FC = () => {
 
     return () => {
       window.removeEventListener('mousemove', onMouseMove);
-      window.removeEventListener('mousedown', onMouseDown);
-      window.removeEventListener('mouseup', onMouseUp);
       window.removeEventListener('resize', onWindowResize);
       
       if (currentMount) {
