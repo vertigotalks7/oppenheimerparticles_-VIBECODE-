@@ -264,24 +264,6 @@ const QuantaVis: React.FC = () => {
         const i3 = i * 3;
         const particlePos = new THREE.Vector3(pPositions[i3], pPositions[i3 + 1], pPositions[i3 + 2]);
         
-        let forceVec = new THREE.Vector3();
-        let forceActive = false;
-        
-        if (isMouseDown) {
-          const distVec = mousePoint.clone().sub(particlePos);
-          const distSq = distVec.lengthSq();
-          if (distSq < 400) { // Repulsion radius
-            const force = 30 / (distSq + 10);
-            forceVec.add(distVec.normalize().multiplyScalar(-force));
-            forceActive = true;
-          }
-        }
-
-        if (forceActive) {
-            velocities[i3] += forceVec.x * 0.1;
-            velocities[i3 + 1] += forceVec.y * 0.1;
-        }
-        
         const noiseScale = 0.05;
         const timeFactor = elapsedTime * 0.1;
         const curlStrength = 0.02;
