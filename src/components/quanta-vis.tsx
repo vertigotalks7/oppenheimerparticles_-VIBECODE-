@@ -241,22 +241,39 @@ const QuantaVis: React.FC = () => {
       
       const speedModulator = ((Math.sin(elapsedTime * 0.1) + 1) / 2) * 0.2 + 0.1;
 
-      // Mouse interaction for repulsion
-      const mouseWorld = new THREE.Vector3(mousePosition.current.x, mousePosition.current.y, 0.5);
-      mouseWorld.unproject(camera);
-      const dir = mouseWorld.sub(camera.position).normalize();
-      const distance = (30 - camera.position.z) / dir.z; // Project mouse to z=30 plane (mid-point of particles)
-      const mouse3DForRepel = camera.position.clone().add(dir.multiplyScalar(distance));
+      // Mouse interaction for repulsion (CPU side)
+      const mouseNDC = new THREE.Vector2(mousePosition.current.x, mousePosition.current.y);
+      const mouseScreenPos = new THREE.Vector2(
+          (mouseNDC.x + 1) * 0.5 * window.innerWidth,
+          (mouseNDC.y + 1) * 0.5 * window.innerHeight
+      );
 
+      const tempParticlePos = new THREE.Vector3();
 
       for (let i = 0; i < particleCount; i++) {
         const i3 = i * 3;
-        const particlePos = new THREE.Vector3(pPositions[i3], pPositions[i3 + 1], pPositions[i3 + 2]);
+        
+        tempParticlePos.set(pPositions[i3], pPositions[i3 + 1], pPositions[i3 + 2]);
+        const projected = tempParticlePos.clone().project(camera);
+        const particleScreenPos = new THREE.Vector2(
+          (projected.x + 1) * 0.5 * window.innerWidth,
+          (projected.y + 1) * 0.5 * window.innerHeight
+        );
 
-        const distanceToMouse = particlePos.distanceTo(mouse3DForRepel);
-        if (distanceToMouse < 15) {
-            const repelForce = (1 - distanceToMouse / 15) * 0.1;
-            const repelVec = particlePos.clone().sub(mouse3DForRepel).normalize().multiplyScalar(repelForce);
+        const distanceToMouse = particleScreenPos.distanceTo(mouseScreenPos);
+        const repelRadius = 100; // in pixels, same as shader
+        if (distanceToMouse < repelRadius) {
+            const repelForce = (1 - distanceToMouse / repelRadius) * 0.05; // smaller force
+            
+            // To get a meaningful repulsion direction, we still need a 3D mouse position.
+            // We'll project it onto the particle's plane.
+            const mouseWorld = new THREE.Vector3(mouseNDC.x, mouseNDC.y, 0.5).unproject(camera);
+            const dir = mouseWorld.sub(camera.position).normalize();
+            const distance = - (camera.position.clone().sub(tempParticlePos)).dot(camera.getWorldDirection(new THREE.Vector3())) / dir.dot(camera.getWorldDirection(new THREE.Vector3()));
+            const mouse3DAtParticleDepth = camera.position.clone().add(dir.multiplyScalar(distance));
+            
+            const repelVec = tempParticlePos.clone().sub(mouse3DAtParticleDepth).normalize().multiplyScalar(repelForce);
+            
             velocities[i3] += repelVec.x;
             velocities[i3 + 1] += repelVec.y;
             velocities[i3 + 2] += repelVec.z;
@@ -266,16 +283,16 @@ const QuantaVis: React.FC = () => {
         const timeFactor = elapsedTime * 0.1;
         const curlStrength = 0.02;
 
-        const noiseX = simplex.noise3d(particlePos.x * noiseScale, particlePos.y * noiseScale, timeFactor);
-        const noiseY = simplex.noise3d(particlePos.y * noiseScale, particlePos.z * noiseScale, timeFactor);
-        const noiseZ = simplex.noise3d(particlePos.z * noiseScale, particlePos.x * noiseScale, timeFactor);
+        const noiseX = simplex.noise3d(tempParticlePos.x * noiseScale, tempParticlePos.y * noiseScale, timeFactor);
+        const noiseY = simplex.noise3d(tempParticlePos.y * noiseScale, tempParticlePos.z * noiseScale, timeFactor);
+        const noiseZ = simplex.noise3d(tempParticlePos.z * noiseScale, tempParticlePos.x * noiseScale, timeFactor);
 
         velocities[i3] += noiseY * curlStrength;
         velocities[i3 + 1] += noiseZ * curlStrength;
         velocities[i3 + 2] += noiseX * curlStrength;
         
-        const centerVec = particlePos.clone().multiplyScalar(-1);
-        const centerDistSq = particlePos.lengthSq();
+        const centerVec = tempParticlePos.clone().multiplyScalar(-1);
+        const centerDistSq = tempParticlePos.lengthSq();
         const repulsionStrength = 0.0001;
         if (centerDistSq > 1) {
             velocities[i3] += centerVec.x * repulsionStrength;
@@ -360,5 +377,3 @@ const QuantaVis: React.FC = () => {
 };
 
 export default QuantaVis;
-
-    
