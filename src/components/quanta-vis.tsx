@@ -79,13 +79,15 @@ const QuantaVis: React.FC = () => {
     const material = new THREE.ShaderMaterial({
         uniforms: {
             time: { value: 1.0 },
-            mousePos: { value: new THREE.Vector3(10000, 10000, 0) }
+            mousePos: { value: new THREE.Vector3(10000, 10000, 0) },
+            viewport: { value: new THREE.Vector2(window.innerWidth, window.innerHeight) }
         },
         vertexShader: `
             attribute float scale;
             attribute vec3 baseColor;
             
             uniform vec3 mousePos;
+            uniform vec2 viewport;
 
             varying vec3 vBaseColor;
             varying float vMouseDist;
@@ -93,13 +95,20 @@ const QuantaVis: React.FC = () => {
             void main() {
                 vBaseColor = baseColor;
                 
-                vec4 modelViewPosition = modelViewMatrix * vec4(position, 1.0);
+                vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
+                vec4 projected = projectionMatrix * mvPosition;
+                projected.xyz /= projected.w; // perspective divide
 
-                vec4 mouseProjected = modelViewMatrix * vec4(mousePos, 1.0);
-                vMouseDist = distance(modelViewPosition.xyz, mouseProjected.xyz);
+                // Convert mouse from normalized device coordinates to screen pixels
+                vec2 mouseScreenPos = vec2((mousePos.x + 1.0) * 0.5 * viewport.x, (mousePos.y + 1.0) * 0.5 * viewport.y);
+                
+                // Convert particle from normalized device coordinates to screen pixels
+                vec2 particleScreenPos = vec2((projected.x + 1.0) * 0.5 * viewport.x, (projected.y + 1.0) * 0.5 * viewport.y);
 
-                gl_Position = projectionMatrix * modelViewPosition;
-                float size = scale * ( 300.0 / -modelViewPosition.z );
+                vMouseDist = distance(particleScreenPos, mouseScreenPos);
+
+                gl_Position = projectionMatrix * mvPosition;
+                float size = scale * ( 300.0 / -mvPosition.z );
                 gl_PointSize = max(1.0, size * 0.8);
             }
         `,
@@ -113,7 +122,8 @@ const QuantaVis: React.FC = () => {
                 
                 float alpha = pow(1.0 - d * 2.0, 0.5);
                 
-                float hoverRadius = 15.0;
+                // radius in pixels
+                float hoverRadius = 100.0; 
                 float colorMix = 1.0 - smoothstep(0.0, hoverRadius, vMouseDist);
                 vec3 hoverColor = vec3(1.0, 0.3, 0.0); // Yellowish-red
 
@@ -192,6 +202,7 @@ const QuantaVis: React.FC = () => {
       renderer.setSize(window.innerWidth, window.innerHeight);
       composer.setSize(window.innerWidth, window.innerHeight);
       renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+      (material.uniforms.viewport as THREE.IUniform<THREE.Vector2>).value.set(window.innerWidth, window.innerHeight);
     };
     window.addEventListener('resize', onWindowResize);
 
@@ -211,6 +222,7 @@ const QuantaVis: React.FC = () => {
       const elapsedTime = clock.getElapsedTime();
 
       (material.uniforms.time as THREE.IUniform<number>).value = elapsedTime;
+      (material.uniforms.mousePos as THREE.IUniform<THREE.Vector3>).value.set(mousePosition.current.x, mousePosition.current.y, 0);
 
       automatedTrails.forEach(trail => {
           (trail.trailMaterial.uniforms.time as THREE.IUniform<number>).value = elapsedTime;
@@ -229,23 +241,22 @@ const QuantaVis: React.FC = () => {
       
       const speedModulator = ((Math.sin(elapsedTime * 0.1) + 1) / 2) * 0.2 + 0.1;
 
-      // Mouse interaction
+      // Mouse interaction for repulsion
       const mouseWorld = new THREE.Vector3(mousePosition.current.x, mousePosition.current.y, 0.5);
       mouseWorld.unproject(camera);
       const dir = mouseWorld.sub(camera.position).normalize();
       const distance = (30 - camera.position.z) / dir.z; // Project mouse to z=30 plane (mid-point of particles)
-      const mouse3D = camera.position.clone().add(dir.multiplyScalar(distance));
-      (material.uniforms.mousePos as THREE.IUniform<THREE.Vector3>).value.copy(mouse3D);
+      const mouse3DForRepel = camera.position.clone().add(dir.multiplyScalar(distance));
 
 
       for (let i = 0; i < particleCount; i++) {
         const i3 = i * 3;
         const particlePos = new THREE.Vector3(pPositions[i3], pPositions[i3 + 1], pPositions[i3 + 2]);
 
-        const distanceToMouse = particlePos.distanceTo(mouse3D);
+        const distanceToMouse = particlePos.distanceTo(mouse3DForRepel);
         if (distanceToMouse < 15) {
             const repelForce = (1 - distanceToMouse / 15) * 0.1;
-            const repelVec = particlePos.clone().sub(mouse3D).normalize().multiplyScalar(repelForce);
+            const repelVec = particlePos.clone().sub(mouse3DForRepel).normalize().multiplyScalar(repelForce);
             velocities[i3] += repelVec.x;
             velocities[i3 + 1] += repelVec.y;
             velocities[i3 + 2] += repelVec.z;
@@ -349,3 +360,5 @@ const QuantaVis: React.FC = () => {
 };
 
 export default QuantaVis;
+
+    
