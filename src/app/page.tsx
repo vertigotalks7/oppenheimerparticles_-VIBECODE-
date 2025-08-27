@@ -75,6 +75,18 @@ export default function Home() {
         <p className="mt-4 text-lg text-cyan-100/80 max-w-2xl">
           An interactive particle simulation inspired by the quantum world. Move your mouse to interact with the particles.
         </p>
+        <p className="mt-6 text-sm text-cyan-100/60">
+          Brought to life by{' '}
+          <a
+            href="https://github.com/vertigotalks7"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="underline hover:text-cyan-100/80 transition-colors"
+          >
+            vertigotalks7
+          </a>{' '}
+          & an AI through vibe coding.
+        </p>
       </div>
     </main>
   );
