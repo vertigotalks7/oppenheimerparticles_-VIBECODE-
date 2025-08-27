@@ -17,6 +17,7 @@ const QuantaVis: React.FC = () => {
     const currentMount = mountRef.current;
     
     let isMouseDown = false;
+    let isFadingOut = false;
     const mouse = new THREE.Vector2();
 
     const scene = new THREE.Scene();
@@ -135,7 +136,7 @@ const QuantaVis: React.FC = () => {
                 uniform vec3 color;
                 uniform float opacity;
                 void main() {
-                    gl_FragColor = vec4(color, opacity * 0.5);
+                    gl_FragColor = vec4(color, opacity);
                 }
             `
             : `
@@ -175,7 +176,6 @@ const QuantaVis: React.FC = () => {
     };
 
     const userTrail = createTrail(true);
-    (userTrail.trailMaterial.uniforms.opacity as THREE.IUniform<number>).value = 1.0;
 
     const automatedTrails: any[] = [];
     const trailConfigs = [
@@ -205,6 +205,8 @@ const QuantaVis: React.FC = () => {
     };
     const onMouseDown = () => {
       isMouseDown = true;
+      isFadingOut = false;
+      (userTrail.trailMaterial.uniforms.opacity as THREE.IUniform<number>).value = 1.0;
       userTrail.trailMesh.visible = true;
       const mousePoint = getMouseWorldPos();
       for (let i = 0; i < userTrail.maxTrailPoints; i++) {
@@ -213,7 +215,7 @@ const QuantaVis: React.FC = () => {
     };
     const onMouseUp = () => {
         isMouseDown = false;
-        userTrail.trailMesh.visible = false;
+        isFadingOut = true;
     };
     
     window.addEventListener('mousemove', onMouseMove);
@@ -242,10 +244,9 @@ const QuantaVis: React.FC = () => {
       (userTrail.trailMaterial.uniforms.time as THREE.IUniform<number>).value = elapsedTime;
       automatedTrails.forEach(trail => {
           (trail.trailMaterial.uniforms.time as THREE.IUniform<number>).value = elapsedTime;
-          // Fade in logic
           const opacityUniform = (trail.trailMaterial.uniforms.opacity as THREE.IUniform<number>);
           if (opacityUniform.value < 1.0) {
-            opacityUniform.value += deltaTime * 0.5; // Fade in over 2 seconds
+            opacityUniform.value += deltaTime * 0.5;
           }
       });
       
@@ -316,6 +317,17 @@ const QuantaVis: React.FC = () => {
         userTrail.trailMesh.geometry.dispose();
         userTrail.trailMesh.geometry = newGeometry;
       }
+      
+      if (isFadingOut) {
+        const opacityUniform = (userTrail.trailMaterial.uniforms.opacity as THREE.IUniform<number>);
+        if (opacityUniform.value > 0) {
+          opacityUniform.value -= deltaTime * 2.0; // Fade out over ~0.5 seconds
+        } else {
+          opacityUniform.value = 0;
+          isFadingOut = false;
+          userTrail.trailMesh.visible = false;
+        }
+      }
 
       automatedTrails.forEach(trail => {
           const t = elapsedTime * trail.speed / 1000;
@@ -373,3 +385,5 @@ const QuantaVis: React.FC = () => {
 };
 
 export default QuantaVis;
+
+    
