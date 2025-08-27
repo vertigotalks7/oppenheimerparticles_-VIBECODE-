@@ -3,6 +3,7 @@
 import QuantaVis from '@/components/quanta-vis';
 import { useState } from 'react';
 import { Sparkles } from 'lucide-react';
+import PomodoroTimer from '@/components/pomodoro-timer';
 
 export default function Home() {
   const [isTitleVisible, setIsTitleVisible] = useState(false);
@@ -12,7 +13,7 @@ export default function Home() {
       <QuantaVis />
 
       <div
-        className={`fixed top-4 z-30 transition-all duration-500 ease-in-out ${
+        className={`fixed top-4 left-4 z-30 transition-all duration-500 ease-in-out ${
           isTitleVisible
             ? 'w-24 h-10'
             : 'w-10 h-10 hover:w-24'
@@ -32,6 +33,8 @@ export default function Home() {
           </span>
         </div>
       </div>
+
+      <PomodoroTimer />
 
       <div
         className={`relative z-20 flex flex-col items-center text-center p-8 bg-black/20 backdrop-blur-md rounded-xl border border-white/10 shadow-lg transition-all duration-700 ease-in-out ${
