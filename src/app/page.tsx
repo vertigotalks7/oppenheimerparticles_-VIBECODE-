@@ -6,6 +6,17 @@ import { Sparkles, Youtube } from 'lucide-react';
 import SimulationWarning from '@/components/simulation-warning';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
+
 
 // By defining the dynamic imports here, Next.js will start preloading them
 // as soon as the Home component is evaluated, even while the warning is shown.
@@ -64,17 +75,33 @@ export default function Home() {
         <Suspense fallback={null}>
           <MusicPlayer />
         </Suspense>
-        <Button 
-          asChild
-          variant="outline" 
-          size="icon" 
-          className="bg-black/50 backdrop-blur-md text-white hover:bg-white/20 border border-white/10 shadow-lg"
-          aria-label="Inspiration"
-        >
-          <Link href="https://www.youtube.com/watch?v=FN1fkSSO-Eo" target="_blank" rel="noopener noreferrer">
-            <Youtube className="h-5 w-5" />
-          </Link>
-        </Button>
+        <AlertDialog>
+          <AlertDialogTrigger asChild>
+            <Button 
+              variant="outline" 
+              size="icon" 
+              className="bg-black/50 backdrop-blur-md text-white hover:bg-white/20 border border-white/10 shadow-lg"
+              aria-label="Inspiration"
+            >
+              <Youtube className="h-5 w-5" />
+            </Button>
+          </AlertDialogTrigger>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Inspiration</AlertDialogTitle>
+              <AlertDialogDescription>
+                This project was inspired by the beautiful and creative work found in the following video.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+               <AlertDialogAction asChild>
+                <Link href="https://www.youtube.com/watch?v=FN1fkSSO-Eo" target="_blank" rel="noopener noreferrer">
+                  Watch on YouTube
+                </Link>
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
 
 
