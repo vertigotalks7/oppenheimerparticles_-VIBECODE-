@@ -6,26 +6,37 @@ import { Button } from './ui/button';
 
 export default function MusicPlayer() {
   const audioRef = useRef<HTMLAudioElement>(null);
-  const [isPlaying, setIsPlaying] = useState(true);
+  const [isPlaying, setIsPlaying] = useState(false);
 
   useEffect(() => {
     const audioElement = audioRef.current;
     if (audioElement) {
-      audioElement.play().catch(error => {
-        // Autoplay was prevented.
-        console.warn("Autoplay was prevented by the browser. User interaction is needed to start the music.");
-        setIsPlaying(false);
-      });
+        // We set the initial state to false, as autoplay is unreliable.
+        // The user will click to start.
+        const handleCanPlay = () => {
+             audioElement.play().then(() => {
+                setIsPlaying(true);
+             }).catch(error => {
+                console.warn("Autoplay was prevented. User must interact to start music.");
+                setIsPlaying(false);
+             });
+        };
+        
+        // Use an event listener to wait until the browser can actually play the file
+        audioElement.addEventListener('canplay', handleCanPlay, { once: true });
 
-      const handlePlay = () => setIsPlaying(true);
-      const handlePause = () => setIsPlaying(false);
+        const handlePlay = () => setIsPlaying(true);
+        const handlePause = () => setIsPlaying(false);
 
-      audioElement.addEventListener('play', handlePlay);
-      audioElement.addEventListener('pause', handlePause);
+        audioElement.addEventListener('play', handlePlay);
+        audioElement.addEventListener('pause', handlePause);
 
       return () => {
-        audioElement.removeEventListener('play', handlePlay);
-        audioElement.removeEventListener('pause', handlePause);
+        if(audioElement) {
+            audioElement.removeEventListener('canplay', handleCanPlay);
+            audioElement.removeEventListener('play', handlePlay);
+            audioElement.removeEventListener('pause', handlePause);
+        }
       };
     }
   }, []);
@@ -38,14 +49,14 @@ export default function MusicPlayer() {
       } else {
         audioElement.play();
       }
-      setIsPlaying(!isPlaying);
+      // The playing state will be updated by the 'play'/'pause' event listeners
     }
   };
 
   return (
     <div className="fixed bottom-4 right-4 z-30">
       {/* The audio element is not visible */}
-      <audio ref={audioRef} src="/videoplayback.m4a" loop autoPlay playsInline />
+      <audio ref={audioRef} src="/videoplayback.m4a" loop playsInline />
       
       <Button 
         onClick={togglePlayPause} 
