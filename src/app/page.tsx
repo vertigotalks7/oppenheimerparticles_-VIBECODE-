@@ -1,16 +1,27 @@
 "use client";
 
-import QuantaVis from '@/components/quanta-vis';
-import { useState } from 'react';
+import { useState, Suspense } from 'react';
+import dynamic from 'next/dynamic';
 import { Sparkles } from 'lucide-react';
-import PomodoroTimer from '@/components/pomodoro-timer';
+
+const QuantaVis = dynamic(() => import('@/components/quanta-vis'), {
+  ssr: false,
+  loading: () => <div className="fixed top-0 left-0 w-full h-full bg-background z-10" />,
+});
+
+const PomodoroTimer = dynamic(() => import('@/components/pomodoro-timer'), {
+  ssr: false,
+});
+
 
 export default function Home() {
   const [isTitleVisible, setIsTitleVisible] = useState(false);
 
   return (
     <main className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden bg-background">
-      <QuantaVis />
+      <Suspense fallback={null}>
+        <QuantaVis />
+      </Suspense>
 
       <div
         className={`fixed top-4 left-4 z-30 transition-all duration-500 ease-in-out ${
@@ -33,8 +44,9 @@ export default function Home() {
           </span>
         </div>
       </div>
-
-      <PomodoroTimer />
+      <Suspense fallback={null}>
+        <PomodoroTimer />
+      </Suspense>
 
       <div
         className={`relative z-20 flex flex-col items-center text-center p-8 bg-black/20 backdrop-blur-md rounded-xl border border-white/10 shadow-lg transition-all duration-700 ease-in-out ${
