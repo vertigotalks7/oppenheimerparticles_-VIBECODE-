@@ -281,9 +281,9 @@ const QuantaVis: React.FC = () => {
             velocities[i3 + 2] += centerVec.z * repulsionStrength;
         }
 
-        velocities[i3] *= 0.97;
-        velocities[i3 + 1] *= 0.97;
-        velocities[i3 + 2] *= 0.97;
+        velocities[i3] *= 0.98;
+        velocities[i3 + 1] *= 0.98;
+        velocities[i3 + 2] *= 0.98;
 
         pPositions[i3] += velocities[i3];
         pPositions[i3 + 1] += velocities[i3 + 1];
