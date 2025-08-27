@@ -1,7 +1,6 @@
-
 "use client";
 
-import React, { useRef, useEffect } from 'react';
+import React, { useRef, useEffect, useCallback } from 'react';
 import * as THREE from 'three';
 import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer.js';
 import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js';
@@ -15,8 +14,6 @@ const QuantaVis: React.FC = () => {
     if (!mountRef.current) return;
 
     const currentMount = mountRef.current;
-    
-    const mouse = new THREE.Vector2();
 
     const scene = new THREE.Scene();
     scene.fog = new THREE.FogExp2(0x0a0f1e, 0.02);
@@ -61,7 +58,6 @@ const QuantaVis: React.FC = () => {
       const i3 = i * 3;
       positions[i3] = (Math.random() - 0.5) * 100;
       positions[i3 + 1] = (Math.random() - 0.5) * 100;
-      // Skew the z-distribution so more particles are farther away
       const skewedRandom = Math.pow(Math.random(), 2);
       positions[i3 + 2] = (skewedRandom - 0.5) * 60 - 30;
 
@@ -179,13 +175,6 @@ const QuantaVis: React.FC = () => {
         automatedTrails.push({ ...trail, ...config, baseRotation: config.rotation.clone() });
     });
 
-    const onMouseMove = (event: MouseEvent) => {
-      mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
-      mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
-    };
-    
-    window.addEventListener('mousemove', onMouseMove);
-
     const onWindowResize = () => {
       camera.aspect = window.innerWidth / window.innerHeight;
       camera.updateProjectionMatrix();
@@ -197,7 +186,6 @@ const QuantaVis: React.FC = () => {
 
     const clock = new THREE.Clock();
     const simplex = new SimplexNoise();
-
     
     const animate = () => {
       requestAnimationFrame(animate);
@@ -299,7 +287,6 @@ const QuantaVis: React.FC = () => {
     animate();
 
     return () => {
-      window.removeEventListener('mousemove', onMouseMove);
       window.removeEventListener('resize', onWindowResize);
       
       if (currentMount) {
@@ -325,5 +312,3 @@ const QuantaVis: React.FC = () => {
 };
 
 export default QuantaVis;
-
-    

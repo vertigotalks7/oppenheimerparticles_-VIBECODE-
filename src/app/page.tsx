@@ -15,6 +15,10 @@ const PomodoroTimer = dynamic(() => import('@/components/pomodoro-timer'), {
   ssr: false,
 });
 
+const MusicPlayer = dynamic(() => import('@/components/music-player'), {
+  ssr: false,
+});
+
 
 export default function Home() {
   const [isTitleVisible, setIsTitleVisible] = useState(false);
@@ -54,6 +58,10 @@ export default function Home() {
         <PomodoroTimer />
       </Suspense>
 
+      <Suspense fallback={null}>
+        <MusicPlayer />
+      </Suspense>
+
       <div
         className={`relative z-20 flex flex-col items-center text-center p-8 bg-black/20 backdrop-blur-md rounded-xl border border-white/10 shadow-lg transition-all duration-700 ease-in-out ${
           isTitleVisible
@@ -65,7 +73,7 @@ export default function Home() {
           QuantaVis
         </h1>
         <p className="mt-4 text-lg text-cyan-100/80 max-w-2xl">
-          An interactive particle simulation inspired by the quantum world. Move your mouse to interact with the particles. Click and drag to create streaks of light.
+          An interactive particle simulation inspired by the quantum world. Move your mouse to interact with the particles.
         </p>
       </div>
     </main>
