@@ -22,7 +22,7 @@ const QuantaVis: React.FC = () => {
     const mouse = new THREE.Vector2();
 
     const scene = new THREE.Scene();
-    scene.fog = new THREE.FogExp2(0x050818, 0.02);
+    scene.fog = new THREE.FogExp2(0x0a0f1e, 0.02);
 
     const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
     camera.position.z = 70;
@@ -40,7 +40,7 @@ const QuantaVis: React.FC = () => {
     composer.addPass(bloomPass);
 
     const fadeMaterial = new THREE.MeshBasicMaterial({
-      color: 0x050818,
+      color: 0x0a0f1e,
       transparent: true,
       opacity: 0.1
     });
@@ -92,7 +92,7 @@ const QuantaVis: React.FC = () => {
                 vec4 modelViewPosition = modelViewMatrix * vec4(position, 1.0);
                 gl_Position = projectionMatrix * modelViewPosition;
                 float size = scale * ( 300.0 / -modelViewPosition.z );
-                gl_PointSize = max(1.0, size);
+                gl_PointSize = max(1.0, size * 0.8);
             }
         `,
         fragmentShader: `
@@ -115,7 +115,7 @@ const QuantaVis: React.FC = () => {
     scene.add(particles);
 
     const createTrail = () => {
-        const maxTrailPoints = 90;
+        const maxTrailPoints = 80;
         const trailPoints = Array.from({ length: maxTrailPoints }, () => new THREE.Vector3());
         const trailCurve = new THREE.CatmullRomCurve3(trailPoints);
         const trailGeometry = new THREE.TubeGeometry(trailCurve, maxTrailPoints - 1, 0.2, 8, false);
@@ -136,7 +136,7 @@ const QuantaVis: React.FC = () => {
                 uniform vec3 color;
                 varying float vUv;
                 void main() {
-                    float alpha = pow(1.0 - vUv, 2.0) * 0.3;
+                    float alpha = pow(1.0 - vUv, 2.0) * 0.2;
                     gl_FragColor = vec4(color, alpha);
                 }
             `,
@@ -155,9 +155,9 @@ const QuantaVis: React.FC = () => {
 
     const automatedTrails: any[] = [];
     const trailConfigs = [
-        { color: 0x7DD3FC, rotation: new THREE.Euler(Math.random() * Math.PI * 2, Math.random() * Math.PI * 2, Math.random() * Math.PI * 2), radiusX: 120, radiusY: 100, speed: 280 },
-        { color: 0x7DD3FC, rotation: new THREE.Euler(Math.random() * Math.PI * 2, Math.random() * Math.PI * 2, Math.random() * Math.PI * 2), radiusX: 110, radiusY: 130, speed: 270 },
-        { color: 0x7DD3FC, rotation: new THREE.Euler(Math.random() * Math.PI * 2, Math.random() * Math.PI * 2, Math.random() * Math.PI * 2), radiusX: 140, radiusY: 110, speed: 290 },
+        { color: 0x7DD3FC, rotation: new THREE.Euler(Math.random() * Math.PI * 2, Math.random() * Math.PI * 2, Math.random() * Math.PI * 2), radiusX: 120, radiusY: 100, speed: 600 },
+        { color: 0x7DD3FC, rotation: new THREE.Euler(Math.random() * Math.PI * 2, Math.random() * Math.PI * 2, Math.random() * Math.PI * 2), radiusX: 110, radiusY: 130, speed: 650 },
+        { color: 0x7DD3FC, rotation: new THREE.Euler(Math.random() * Math.PI * 2, Math.random() * Math.PI * 2, Math.random() * Math.PI * 2), radiusX: 140, radiusY: 110, speed: 700 },
     ];
 
     trailConfigs.forEach(config => {
