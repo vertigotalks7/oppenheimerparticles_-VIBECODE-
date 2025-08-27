@@ -3,6 +3,7 @@
 import { useState, Suspense } from 'react';
 import dynamic from 'next/dynamic';
 import { Sparkles } from 'lucide-react';
+import SimulationWarning from '@/components/simulation-warning';
 
 const QuantaVis = dynamic(() => import('@/components/quanta-vis'), {
   ssr: false,
@@ -15,6 +16,11 @@ const PomodoroTimer = dynamic(() => import('@/components/pomodoro-timer'), {
 
 export default function Home() {
   const [isTitleVisible, setIsTitleVisible] = useState(false);
+  const [simulationStarted, setSimulationStarted] = useState(false);
+
+  if (!simulationStarted) {
+    return <SimulationWarning onStart={() => setSimulationStarted(true)} />;
+  }
 
   return (
     <main className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden bg-background">
