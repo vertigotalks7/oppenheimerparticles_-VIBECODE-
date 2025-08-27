@@ -132,7 +132,8 @@ const QuantaVis: React.FC = () => {
         const trailMaterial = new THREE.ShaderMaterial({
             uniforms: {
                 time: { value: 0 },
-                color: { value: new THREE.Color(0x7DD3FC) }
+                color: { value: new THREE.Color(0x7DD3FC) },
+                opacity: { value: 0.0 }
             },
             vertexShader: `
                 varying float vUv;
@@ -144,9 +145,10 @@ const QuantaVis: React.FC = () => {
             fragmentShader: `
                 uniform float time;
                 uniform vec3 color;
+                uniform float opacity;
                 varying float vUv;
                 void main() {
-                    float alpha = pow(1.0 - vUv, 2.0) * 0.2;
+                    float alpha = pow(1.0 - vUv, 2.0) * 0.2 * opacity;
                     gl_FragColor = vec4(color, alpha);
                 }
             `,
@@ -162,6 +164,7 @@ const QuantaVis: React.FC = () => {
     };
 
     const userTrail = createTrail();
+    (userTrail.trailMaterial.uniforms.opacity as THREE.IUniform<number>).value = 1.0;
 
     const automatedTrails: any[] = [];
     const trailConfigs = [
@@ -225,7 +228,14 @@ const QuantaVis: React.FC = () => {
 
       (material.uniforms.time as THREE.IUniform<number>).value = elapsedTime;
       (userTrail.trailMaterial.uniforms.time as THREE.IUniform<number>).value = elapsedTime;
-      automatedTrails.forEach(trail => (trail.trailMaterial.uniforms.time as THREE.IUniform<number>).value = elapsedTime);
+      automatedTrails.forEach(trail => {
+          (trail.trailMaterial.uniforms.time as THREE.IUniform<number>).value = elapsedTime;
+          // Fade in logic
+          const opacityUniform = (trail.trailMaterial.uniforms.opacity as THREE.IUniform<number>);
+          if (opacityUniform.value < 1.0) {
+            opacityUniform.value += deltaTime * 0.5; // Fade in over 2 seconds
+          }
+      });
       
       const mousePoint = getMouseWorldPos();
       
