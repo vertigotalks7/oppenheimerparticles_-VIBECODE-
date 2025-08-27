@@ -10,11 +10,9 @@ import { SimplexNoise } from 'three/examples/jsm/math/SimplexNoise.js';
 
 const QuantaVis: React.FC = () => {
   const mountRef = useRef<HTMLDivElement>(null);
-  const isInitialized = useRef(false);
 
   useEffect(() => {
-    if (isInitialized.current || !mountRef.current) return;
-    isInitialized.current = true;
+    if (!mountRef.current) return;
 
     const currentMount = mountRef.current;
     
