@@ -22,7 +22,7 @@ const QuantaVis: React.FC = () => {
     const mouse = new THREE.Vector2();
 
     const scene = new THREE.Scene();
-    scene.fog = new THREE.FogExp2(0x0a0f1e, 0.02);
+    scene.fog = new THREE.FogExp2(0x000022, 0.02);
 
     const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
     camera.position.z = 70;
@@ -40,7 +40,7 @@ const QuantaVis: React.FC = () => {
     composer.addPass(bloomPass);
 
     const fadeMaterial = new THREE.MeshBasicMaterial({
-      color: 0x0a0f1e,
+      color: 0x000022,
       transparent: true,
       opacity: 0.1
     });
@@ -115,7 +115,7 @@ const QuantaVis: React.FC = () => {
     scene.add(particles);
 
     const createTrail = () => {
-        const maxTrailPoints = 80;
+        const maxTrailPoints = 120;
         const trailPoints = Array.from({ length: maxTrailPoints }, () => new THREE.Vector3());
         const trailCurve = new THREE.CatmullRomCurve3(trailPoints);
         const trailGeometry = new THREE.TubeGeometry(trailCurve, maxTrailPoints - 1, 0.2, 8, false);
@@ -155,9 +155,9 @@ const QuantaVis: React.FC = () => {
 
     const automatedTrails: any[] = [];
     const trailConfigs = [
-        { color: 0x7DD3FC, rotation: new THREE.Euler(Math.random() * Math.PI * 2, Math.random() * Math.PI * 2, Math.random() * Math.PI * 2), radiusX: 120, radiusY: 100, speed: 600 },
-        { color: 0x7DD3FC, rotation: new THREE.Euler(Math.random() * Math.PI * 2, Math.random() * Math.PI * 2, Math.random() * Math.PI * 2), radiusX: 110, radiusY: 130, speed: 650 },
-        { color: 0x7DD3FC, rotation: new THREE.Euler(Math.random() * Math.PI * 2, Math.random() * Math.PI * 2, Math.random() * Math.PI * 2), radiusX: 140, radiusY: 110, speed: 700 },
+        { color: 0x7DD3FC, rotation: new THREE.Euler(Math.random() * Math.PI * 2, Math.random() * Math.PI * 2, Math.random() * Math.PI * 2), radiusX: 120, radiusY: 100, speed: 1800 },
+        { color: 0x7DD3FC, rotation: new THREE.Euler(Math.random() * Math.PI * 2, Math.random() * Math.PI * 2, Math.random() * Math.PI * 2), radiusX: 110, radiusY: 130, speed: 1950 },
+        { color: 0x7DD3FC, rotation: new THREE.Euler(Math.random() * Math.PI * 2, Math.random() * Math.PI * 2, Math.random() * Math.PI * 2), radiusX: 140, radiusY: 110, speed: 2100 },
     ];
 
     trailConfigs.forEach(config => {
@@ -357,5 +357,7 @@ const QuantaVis: React.FC = () => {
 };
 
 export default QuantaVis;
+
+    
 
     
