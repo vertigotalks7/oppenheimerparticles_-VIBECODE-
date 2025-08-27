@@ -87,9 +87,11 @@ const QuantaVis: React.FC = () => {
             attribute float scale;
             attribute vec3 baseColor;
             varying vec3 vBaseColor;
+            varying float vDepth;
             void main() {
                 vBaseColor = baseColor;
                 vec4 modelViewPosition = modelViewMatrix * vec4(position, 1.0);
+                vDepth = -modelViewPosition.z;
                 gl_Position = projectionMatrix * modelViewPosition;
                 float size = scale * ( 300.0 / -modelViewPosition.z );
                 gl_PointSize = max(1.0, size * 0.8);
@@ -97,11 +99,19 @@ const QuantaVis: React.FC = () => {
         `,
         fragmentShader: `
             varying vec3 vBaseColor;
+            varying float vDepth;
             void main() {
                 float d = distance(gl_PointCoord, vec2(0.5, 0.5));
+                
+                float focusDepth = 40.0;
+                float focusRange = 80.0;
+                float blur = smoothstep(0.0, focusRange, abs(vDepth - focusDepth));
+                
+                float sharpness = 1.0 - blur * 0.7;
+
                 if (d > 0.5) discard;
                 
-                float alpha = 1.0 - d * 2.0;
+                float alpha = pow(1.0 - d * 2.0, sharpness);
                 
                 gl_FragColor = vec4(vBaseColor, alpha);
             }
@@ -357,9 +367,3 @@ const QuantaVis: React.FC = () => {
 };
 
 export default QuantaVis;
-
-    
-
-    
-
-    
