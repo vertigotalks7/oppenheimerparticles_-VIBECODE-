@@ -88,14 +88,12 @@ const QuantaVis: React.FC = () => {
             uniform vec3 mousePos;
 
             varying vec3 vBaseColor;
-            varying float vDepth;
             varying float vMouseDist;
 
             void main() {
                 vBaseColor = baseColor;
                 
                 vec4 modelViewPosition = modelViewMatrix * vec4(position, 1.0);
-                vDepth = -modelViewPosition.z;
 
                 vec4 mouseProjected = modelViewMatrix * vec4(mousePos, 1.0);
                 vMouseDist = distance(modelViewPosition.xyz, mouseProjected.xyz);
@@ -107,27 +105,19 @@ const QuantaVis: React.FC = () => {
         `,
         fragmentShader: `
             varying vec3 vBaseColor;
-            varying float vDepth;
             varying float vMouseDist;
 
             void main() {
                 float d = distance(gl_PointCoord, vec2(0.5, 0.5));
-                
-                float focusDepth = 40.0;
-                float focusRange = 80.0;
-                float blur = smoothstep(0.0, focusRange, abs(vDepth - focusDepth));
-                
-                float sharpness = 1.0 - blur * 0.7;
-
                 if (d > 0.5) discard;
                 
-                float alpha = pow(1.0 - d * 2.0, sharpness);
+                float alpha = pow(1.0 - d * 2.0, 0.5);
                 
                 float hoverRadius = 15.0;
                 float colorMix = 1.0 - smoothstep(0.0, hoverRadius, vMouseDist);
                 vec3 hoverColor = vec3(1.0, 0.3, 0.0); // Yellowish-red
 
-                vec3 finalColor = mix(vBaseColor, hoverColor, colorMix * sharpness);
+                vec3 finalColor = mix(vBaseColor, hoverColor, colorMix);
 
                 gl_FragColor = vec4(finalColor, alpha);
             }
@@ -359,5 +349,3 @@ const QuantaVis: React.FC = () => {
 };
 
 export default QuantaVis;
-
-    
