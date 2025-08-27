@@ -179,6 +179,14 @@ const QuantaVis: React.FC = () => {
         (trail.trailMaterial.uniforms.color.value as THREE.Color).set(config.color);
         automatedTrails.push({ ...trail, ...config, baseRotation: config.rotation.clone() });
     });
+    
+    const getMouseWorldPos = () => {
+        const mouseWorldPos = new THREE.Vector3(mouse.x, mouse.y, 0.5);
+        mouseWorldPos.unproject(camera);
+        const dir = mouseWorldPos.sub(camera.position).normalize();
+        const distance = -camera.position.z / dir.z;
+        return camera.position.clone().add(dir.multiplyScalar(distance));
+    }
 
     const onMouseMove = (event: MouseEvent) => {
       mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
@@ -213,13 +221,6 @@ const QuantaVis: React.FC = () => {
     const clock = new THREE.Clock();
     const simplex = new SimplexNoise();
 
-    const getMouseWorldPos = () => {
-        const mouseWorldPos = new THREE.Vector3(mouse.x, mouse.y, 0.5);
-        mouseWorldPos.unproject(camera);
-        const dir = mouseWorldPos.sub(camera.position).normalize();
-        const distance = -camera.position.z / dir.z;
-        return camera.position.clone().add(dir.multiplyScalar(distance));
-    }
     
     const animate = () => {
       requestAnimationFrame(animate);
