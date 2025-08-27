@@ -1,14 +1,8 @@
 import type {NextConfig} from 'next';
 
-const repo = 'oppenheimerparticles_-VIBECODE-';
-const assetPrefix = `/${repo}/`;
-const basePath = `/${repo}`;
-
 const nextConfig: NextConfig = {
   /* config options here */
   output: 'export',
-  assetPrefix: assetPrefix,
-  basePath: basePath,
   typescript: {
     ignoreBuildErrors: true,
   },
