@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useRef, useEffect, useCallback } from 'react';
@@ -11,16 +12,9 @@ import { SimplexNoise } from 'three/examples/jsm/math/SimplexNoise.js';
 const QuantaVis: React.FC = () => {
   const mountRef = useRef<HTMLDivElement>(null);
   const mousePosition = useRef(new THREE.Vector2(10000, 10000));
-  const interactionSynth = useRef<Tone.Synth | null>(null);
 
   useEffect(() => {
     if (!mountRef.current) return;
-
-    interactionSynth.current = new Tone.Synth({
-      oscillator: { type: 'sine' },
-      envelope: { attack: 0.005, decay: 0.1, sustain: 0.3, release: 0.2 },
-    }).toDestination();
-    interactionSynth.current.volume.value = -20;
 
     const currentMount = mountRef.current;
 
@@ -203,9 +197,6 @@ const QuantaVis: React.FC = () => {
     const clock = new THREE.Clock();
     const simplex = new SimplexNoise();
     
-    let interactionSoundPlayed = false;
-    let lastInteractionTime = 0;
-
     const animate = () => {
       requestAnimationFrame(animate);
       const deltaTime = clock.getDelta();
@@ -237,7 +228,6 @@ const QuantaVis: React.FC = () => {
       const distance = -camera.position.z / dir.z;
       const mouse3D = camera.position.clone().add(dir.multiplyScalar(distance));
 
-      let particlesInteracted = 0;
 
       for (let i = 0; i < particleCount; i++) {
         const i3 = i * 3;
@@ -250,7 +240,6 @@ const QuantaVis: React.FC = () => {
             velocities[i3] += repelVec.x;
             velocities[i3 + 1] += repelVec.y;
             velocities[i3 + 2] += repelVec.z;
-            particlesInteracted++;
         }
         
         const noiseScale = 0.05;
@@ -297,14 +286,6 @@ const QuantaVis: React.FC = () => {
       }
       particles.geometry.attributes.position.needsUpdate = true;
       
-      if (particlesInteracted > 10 && elapsedTime > lastInteractionTime + 0.1) {
-        if (interactionSynth.current) {
-            const note = 440 + Math.sin(elapsedTime * 2) * 100;
-            interactionSynth.current.triggerAttackRelease(note, "32n", Tone.now());
-            lastInteractionTime = elapsedTime;
-        }
-      }
-
       automatedTrails.forEach(trail => {
           const t = elapsedTime * trail.speed / 1000;
           const x = trail.radiusX * Math.cos(t);
