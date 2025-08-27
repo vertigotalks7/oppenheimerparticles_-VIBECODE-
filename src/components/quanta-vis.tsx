@@ -184,9 +184,9 @@ const QuantaVis: React.FC = () => {
 
     const automatedTrails: any[] = [];
     const trailConfigs = [
-        { color: 0x7DD3FC, rotation: new THREE.Euler(Math.random() * Math.PI * 2, Math.random() * Math.PI * 2, Math.random() * Math.PI * 2), radiusX: 120, radiusY: 100, speed: 1800 },
-        { color: 0x7DD3FC, rotation: new THREE.Euler(Math.random() * Math.PI * 2, Math.random() * Math.PI * 2, Math.random() * Math.PI * 2), radiusX: 110, radiusY: 130, speed: 1950 },
-        { color: 0x7DD3FC, rotation: new THREE.Euler(Math.random() * Math.PI * 2, Math.random() * Math.PI * 2, Math.random() * Math.PI * 2), radiusX: 140, radiusY: 110, speed: 2100 },
+        { color: 0x7DD3FC, rotation: new THREE.Euler(Math.random() * Math.PI * 2, Math.random() * Math.PI * 2, Math.random() * Math.PI * 2), radiusX: 120, radiusY: 100, speed: 2800 },
+        { color: 0x7DD3FC, rotation: new THREE.Euler(Math.random() * Math.PI * 2, Math.random() * Math.PI * 2, Math.random() * Math.PI * 2), radiusX: 110, radiusY: 130, speed: 2950 },
+        { color: 0x7DD3FC, rotation: new THREE.Euler(Math.random() * Math.PI * 2, Math.random() * Math.PI * 2, Math.random() * Math.PI * 2), radiusX: 140, radiusY: 110, speed: 3100 },
     ];
 
     trailConfigs.forEach(config => {
@@ -235,11 +235,11 @@ const QuantaVis: React.FC = () => {
       const pPositions = particles.geometry.attributes.position.array as Float32Array;
       
       const boundingBox = new THREE.Box3(
-        new THREE.Vector3(-60, -40, -40),
-        new THREE.Vector3(60, 40, 40)
+        new THREE.Vector3(-100, -60, -60),
+        new THREE.Vector3(100, 60, 60)
       );
       
-      const speedModulator = ((Math.sin(elapsedTime * 0.1) + 1) / 2) * 0.2 + 0.1;
+      const speedModulator = ((Math.sin(elapsedTime * 0.1) + 1) / 2) * 0.8 + 0.05;
 
       // Mouse interaction for repulsion (CPU side)
       const mouseNDC = new THREE.Vector2(mousePosition.current.x, mousePosition.current.y);
