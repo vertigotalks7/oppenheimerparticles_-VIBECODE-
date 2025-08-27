@@ -47,7 +47,7 @@ export default function MusicPlayer() {
 
   return (
     <div className="fixed bottom-4 right-4 z-30">
-      <audio ref={audioRef} src="/background-music.mp3" loop playsInline />
+      <audio ref={audioRef} src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3" loop playsInline />
       
       <Button 
         onClick={togglePlayPause} 
