@@ -18,9 +18,7 @@ export default function Home() {
 
   return (
     <main className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden bg-background">
-      <Suspense fallback={null}>
-        <QuantaVis />
-      </Suspense>
+      <QuantaVis />
 
       <div
         className={`fixed top-4 left-4 z-30 transition-all duration-500 ease-in-out ${
@@ -43,6 +41,7 @@ export default function Home() {
           </span>
         </div>
       </div>
+      
       <Suspense fallback={null}>
         <PomodoroTimer />
       </Suspense>
