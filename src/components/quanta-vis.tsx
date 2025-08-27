@@ -127,7 +127,7 @@ const QuantaVis: React.FC = () => {
     scene.add(particles);
 
     const createTrail = () => {
-        const maxTrailPoints = 120;
+        const maxTrailPoints = 150;
         const trailPoints = Array.from({ length: maxTrailPoints }, () => new THREE.Vector3());
         const trailCurve = new THREE.CatmullRomCurve3(trailPoints);
         const trailGeometry = new THREE.TubeGeometry(trailCurve, maxTrailPoints - 1, 0.2, 8, false);
@@ -237,6 +237,8 @@ const QuantaVis: React.FC = () => {
         new THREE.Vector3(-60, -40, -40),
         new THREE.Vector3(60, 40, 40)
       );
+      
+      const speedModulator = ((Math.sin(elapsedTime * 0.5) + 1) / 2) * 1.4 + 0.1; // Ranges from 0.1 to 1.5
 
       for (let i = 0; i < particleCount; i++) {
         const i3 = i * 3;
@@ -285,9 +287,9 @@ const QuantaVis: React.FC = () => {
         velocities[i3 + 1] *= 0.98;
         velocities[i3 + 2] *= 0.98;
 
-        pPositions[i3] += velocities[i3];
-        pPositions[i3 + 1] += velocities[i3 + 1];
-        pPositions[i3 + 2] += velocities[i3 + 2];
+        pPositions[i3] += velocities[i3] * speedModulator;
+        pPositions[i3 + 1] += velocities[i3 + 1] * speedModulator;
+        pPositions[i3 + 2] += velocities[i3 + 2] * speedModulator;
 
         if (pPositions[i3] > boundingBox.max.x || pPositions[i3] < boundingBox.min.x) {
             pPositions[i3] = Math.max(boundingBox.min.x, Math.min(boundingBox.max.x, pPositions[i3]));
