@@ -96,11 +96,12 @@ export default function PomodoroTimer() {
       </div>
 
       <div
-        className={`relative z-20 flex flex-col items-center justify-center text-center p-8 bg-black/20 backdrop-blur-md rounded-xl border border-white/10 shadow-lg transition-all duration-700 ease-in-out ${
+        className={`fixed z-20 flex flex-col items-center justify-center text-center p-8 bg-black/20 backdrop-blur-md rounded-xl border border-white/10 shadow-lg transition-all duration-700 ease-in-out ${
           isExpanded
             ? 'opacity-100 translate-y-0 scale-100'
             : 'opacity-0 -translate-y-10 scale-95 pointer-events-none'
         }`}
+        style={{top: '50%', left: '50%', transform: 'translate(-50%, -50%)'}}
       >
         <h2 className="text-2xl font-bold text-cyan-200/90 mb-2">
           {isWorkSession ? 'Work Session' : 'Break Time'}
